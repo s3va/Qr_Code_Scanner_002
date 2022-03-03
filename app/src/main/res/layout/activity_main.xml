@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="viewmodelmainactivity"
+            type="tk.kvakva.qrcodescanner002.ViewModelMainActivity" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MainActivity">
+
+        <Spinner
+            android:id="@+id/size_spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="16dp"
+            android:contentDescription="@string/flash_spin_spick"
+            android:elevation="4dp"
+            android:minHeight="48dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:visibility="visible" />
+
+        <androidx.camera.view.PreviewView
+            android:id="@+id/previewView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        </androidx.camera.view.PreviewView>
+
+        <ImageButton
+            android:id="@+id/flashBtn"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginBottom="16dp"
+            android:contentDescription="@string/flash_light"
+            android:onClick="@{() -> viewmodelmainactivity.flashOnOff()}"
+            android:src="@{viewmodelmainactivity.flashActive ? @drawable/ic_baseline_flashlight_on_24_red : @drawable/ic_baseline_flashlight_off_24}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/photoBtn"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:src="@drawable/ic_baseline_flashlight_off_24" />
+
+        <ImageButton
+            android:id="@+id/photoBtn"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="16dp"
+
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="16dp"
+            android:contentDescription="@string/take_a_picture_or_video"
+            android:onClick="takePhoto"
+            android:onLongClick="@{() -> viewmodelmainactivity.takeAVideoAction()}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/qrBtn"
+            app:layout_constraintHorizontal_bias="0.5"
+
+            app:layout_constraintStart_toEndOf="@+id/flashBtn"
+            app:srcCompat="@drawable/ic_baseline_camera_alt_24"
+            app:threePictures="@{viewmodelmainactivity.photoAction}" />
+
+        <ImageButton
+            android:id="@+id/qrBtn"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="16dp"
+            android:contentDescription="@string/qr_code_scan"
+            android:onClick="@{() -> viewmodelmainactivity.qrScnOnOff()}"
+            android:src="@{viewmodelmainactivity.qrScnActive ? @drawable/ic_baseline_qr_code_scanner_24_red : @drawable/ic_baseline_qr_code_24}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/photoBtn"
+            tools:src="@drawable/ic_baseline_qr_code_24" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

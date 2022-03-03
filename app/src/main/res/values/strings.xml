@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Qr Code Scanner 002</string>
+    <string name="flash_light">Flash Light</string>
+    <string name="qr_code_scan">Qr Code Scan</string>
+    <string name="photo_button">Photo Button</string>
+    <string name="take_a_picture_or_video">take a picture or video</string>
+    <string name="open_options_fragment_menu">Open options fragment(menu)</string>
+    <string name="select_directory">Select Directory</string>
+    <string name="flash_spin_spick">Flash spinner</string>
+</resources>
