@@ -8,6 +8,7 @@ import android.content.res.Configuration
 import android.graphics.ImageFormat
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.params.StreamConfigurationMap
+import android.media.MediaRecorder
 import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -31,26 +32,42 @@ import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.lifecycleScope
+import com.google.mlkit.vision.barcode.BarcodeScannerOptions
+import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.common.InputImage
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import tk.kvakva.qrcodescanner002.databinding.ActivityMainBinding
 import java.io.File
-import java.nio.ByteBuffer
 import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-typealias LumaListener = (luma: Double) -> Unit
+// typealias LumaListener = (luma: Double) -> Unit
 
 private const val TAG = "MainActivity"
 
 class MainActivity : AppCompatActivity() {
     //val sizesArray: ArrayList<String> = arrayListOf<String>()
     private var imageCapture: ImageCapture? = null
+    private var videoCapture: VideoCapture? = null
     private var camera: Camera? = null
     private lateinit var cameraExecutor: ExecutorService
-//    private lateinit var outputDirectory: File
+    private var cameraProvider: ProcessCameraProvider? = null
+    private var imageAnalyzer: ImageAnalysis? = null
+
+    //    private lateinit var outputDirectory: File
+    val scanner = BarcodeScanning.getClient(
+        BarcodeScannerOptions.Builder()
+            .setBarcodeFormats(
+                Barcode.FORMAT_ALL_FORMATS
+                //Barcode.FORMAT_QR_CODE,
+                //Barcode.FORMAT_AZTEC
+            )
+            .build()
+    )
 
     private val viewModelMaAc by viewModels<ViewModelMainActivity>()
     private val requestPermissionLauncher =
@@ -181,6 +198,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        viewModelMaAc.qrScnActive.observe(this) {
+            if (it)
+                addQrAnalyzer()
+            else
+                delQrAnalyzer()
+        }
 
     }
 
@@ -222,7 +245,7 @@ class MainActivity : AppCompatActivity() {
 
         cameraProviderFuture.addListener(Runnable {
             // Used to bind the lifecycle of cameras to the lifecycle owner
-            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+            cameraProvider = cameraProviderFuture.get()
 
             // Preview
             val preview = Preview.Builder()
@@ -239,35 +262,27 @@ class MainActivity : AppCompatActivity() {
                 //.setTargetResolution(viewModelMaAc.picSize.value)
                 //.setTargetResolution(Size(1080,1920))
                 .setTargetResolution(
-                    if(this.resources.configuration.orientation==Configuration.ORIENTATION_PORTRAIT)
-                        Size(viewModelMaAc.picSize.value.height,viewModelMaAc.picSize.value.width)
+                    if (this.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT)
+                        Size(viewModelMaAc.picSize.value.height, viewModelMaAc.picSize.value.width)
                     else
                         viewModelMaAc.picSize.value
                 )
                 .build()
 
-            val imageAnalyzer = ImageAnalysis.Builder()
-                .build()
-                .also {
-
-                    it.setAnalyzer(cameraExecutor, LuminosityAnalyzer { luma ->
-                        //Log.d(TAG, "Average luminosity: $luma")
-                    })
-                }
 
             // Select back camera as a default
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
-            /*val videoCapture = VideoCapture.Builder()
+            /*videoCapture = VideoCapture.Builder()
                 .build()*/
 
             try {
                 // Unbind use cases before rebinding
-                cameraProvider.unbindAll()
+                cameraProvider?.unbindAll()
 
                 // Bind use cases to camera
-                camera = cameraProvider.bindToLifecycle(
-                    this, cameraSelector, preview, imageCapture, imageAnalyzer
+                camera = cameraProvider?.bindToLifecycle(
+                    this, cameraSelector, preview, imageCapture //, imageAnalyzer
                     //this, cameraSelector, preview, imageCapture, videoCapture
                 )
                 camera?.let { camera ->
@@ -306,6 +321,15 @@ class MainActivity : AppCompatActivity() {
                             "startCamera: viewModelMaAc.sizes.value ${viewModelMaAc.sizes.value?.asList()}"
                         )
                     }
+
+                    streamConfigurationMap?.getOutputSizes(MediaRecorder::class.java)?.let {
+                        Log.e(
+                            TAG,
+                            "startCamera: streamConfigurationMap?.getOutputSizes(MediaRecorder::class.java)?.let ---\n${it.asList()}\n---"
+                        )
+                    }
+
+
                     camera.cameraControl.enableTorch(viewModelMaAc.flashActive.value)
                 }
             } catch (exc: Exception) {
@@ -329,47 +353,8 @@ class MainActivity : AppCompatActivity() {
             arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)
     }
 
-    private class LuminosityAnalyzer(private val listener: LumaListener) : ImageAnalysis.Analyzer {
-
-        private fun ByteBuffer.toByteArray(): ByteArray {
-            rewind()    // Rewind the buffer to zero
-            val data = ByteArray(remaining())
-            get(data)   // Copy the buffer into a byte array
-            return data // Return the byte array
-        }
-
-        override fun analyze(image: ImageProxy) {
-
-            val buffer = image.planes[0].buffer
-            val data = buffer.toByteArray()
-            val pixels = data.map { it.toInt() and 0xFF }
-            val luma = pixels.average()
-
-            listener(luma)
-
-            image.close()
-        }
-    }
 
     fun takePhoto(v: View) {
-
-
-        (binding.sizeSpinner.adapter as ArrayAdapter<String>).notifyDataSetChanged()
-        //(binding.sizeSpinner.adapter as ArrayAdapter<String>).notifyDataSetInvalidated()
-        binding.sizeSpinner.setSelection(
-            viewModelMaAc.sizesStrings.value?.indexOf(
-                viewModelMaAc.picSize.value.toString()
-            ) ?: 0
-        )
-        Log.e(TAG, """takePhoto: 
-            |viewModelMaAc.sizes.value: 
-            |${viewModelMaAc.sizes.value?.asList()}
-            |viewModelMaAc.sizesString.value: 
-            |${viewModelMaAc.sizesStrings.value}
-            |viewModelMacAc.picSize.valude
-            |${viewModelMaAc.picSize.value}
-        """.trimMargin())
-
 
         if (viewModelMaAc.photoAction.value == ViewModelMainActivity.PhotoAction.Non)
             viewModelMaAc.photoAction.value = ViewModelMainActivity.PhotoAction.GettingPhoto
@@ -451,6 +436,112 @@ class MainActivity : AppCompatActivity() {
                 }
             })
     }
+
+
+    //fun scanBarcodes(i: InputImage) {
+    @SuppressLint("UnsafeOptInUsageError")
+    fun scanBarcodes(i: ImageProxy) {
+
+        if (i.image == null)
+            return
+        val image = InputImage.fromMediaImage(i.image!!, i.imageInfo.rotationDegrees)
+        // [START set_detector_options]
+        val options = BarcodeScannerOptions.Builder()
+            .setBarcodeFormats(
+                Barcode.FORMAT_ALL_FORMATS
+                //Barcode.FORMAT_QR_CODE,
+                //Barcode.FORMAT_AZTEC
+            )
+            .build()
+        // [END set_detector_options]
+
+        // [START get_detector]
+        //val scanner = BarcodeScanning.getClient()
+        // Or, to specify the formats to recognize:
+        // val scanner = BarcodeScanning.getClient(options)
+        // [END get_detector]
+
+        // [START run_detector]
+        val result = scanner.process(image)
+            .addOnSuccessListener { barcodes ->
+                Log.e(TAG, "//////////// scanBarcodes: $barcodes")
+                // Task completed successfully
+                // [START_EXCLUDE]
+                // [START get_barcodes]
+                viewModelMaAc.qrTvTxSet("")
+                for (barcode in barcodes) {
+
+                    val bounds = barcode.boundingBox
+                    val corners = barcode.cornerPoints
+
+                    val rawValue = barcode.rawValue
+
+                    viewModelMaAc.qrTvTxSet(viewModelMaAc.qrTvTx.value + "\n--------\n" + rawValue)
+
+                    Log.e(TAG, "scanBarcodes: barcode.rawValue ====== ${barcode.rawValue}")
+                    val valueType = barcode.valueType
+                    // See API reference for complete list of supported types
+                    when (valueType) {
+                        Barcode.TYPE_WIFI -> {
+                            val ssid = barcode.wifi!!.ssid
+                            val password = barcode.wifi!!.password
+                            val type = barcode.wifi!!.encryptionType
+                        }
+                        Barcode.TYPE_URL -> {
+                            val title = barcode.url!!.title
+                            val url = barcode.url!!.url
+                        }
+                    }
+                }
+                i.close()
+                if (barcodes.size > 0) {
+                    delQrAnalyzer()
+                    viewModelMaAc.qrScnOff()
+                }
+                // [END get_barcodes]
+                // [END_EXCLUDE]
+            }
+            .addOnFailureListener {
+                // Task failed with an exception
+                Log.e(TAG, "scanBarcodes: ${it.stackTraceToString()}")
+                // ...
+            }
+
+
+        // [END run_detector]
+    }
+
+    fun addQrAnalyzer() {
+
+        if (cameraProvider == null)
+            return
+
+        if (imageAnalyzer != null)
+            cameraProvider?.unbind(imageAnalyzer)
+
+        imageAnalyzer = ImageAnalysis.Builder()
+            .build()
+            .also {
+                it.setAnalyzer(cameraExecutor) { iprx ->
+                    scanBarcodes(iprx)
+                }
+            }
+
+        cameraProvider?.bindToLifecycle(
+            this,
+            CameraSelector.DEFAULT_BACK_CAMERA,
+            imageAnalyzer
+        )
+    }
+
+    fun delQrAnalyzer() {
+        if (cameraProvider == null)
+            return
+        if (imageAnalyzer != null)
+            cameraProvider?.unbind(imageAnalyzer)
+    }
+
+
 }
 
 fun datelocaltimestring() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

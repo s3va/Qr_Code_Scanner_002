@@ -27,10 +27,20 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "ur
 
 class ViewModelMainActivity(private val apl: Application) : AndroidViewModel(apl) {
 
-    //    private val _qrScnActive = MutableLiveData(false)
-//    val qrScnActive: LiveData<Boolean> = _qrScnActive
-    private val _qrScnActive = MutableStateFlow(false)
-    val qrScnActive: StateFlow<Boolean> = _qrScnActive
+    private val _qrScnActive = MutableLiveData(false)
+    val qrScnActive: LiveData<Boolean> = _qrScnActive
+//    private val _qrScnActive = MutableStateFlow(false)
+//    val qrScnActive: StateFlow<Boolean> = _qrScnActive
+
+    private val _qrTvTx = MutableLiveData("XXXXXX XXXXXX XXXXXX")
+    val qrTvTx: LiveData<String> = _qrTvTx
+
+    fun qrTvTxSet(s: String) {
+        _qrTvTx.value = s
+    }
+
+    private val _qrTvVis = MutableLiveData(false)
+    val qrTvVis: LiveData<Boolean> = _qrTvVis
 
     //    private val _flashActive = MutableLiveData(false)
 //    val flashActive: LiveData<Boolean>
@@ -53,8 +63,12 @@ class ViewModelMainActivity(private val apl: Application) : AndroidViewModel(apl
         _qrScnActive.value = when (qrScnActive.value) {
             true -> false
             false -> true
-            //  null -> false
+            null -> false
         }
+    }
+
+    fun qrScnOff() {
+        _qrScnActive.value = false
     }
 
     enum class PhotoAction {
@@ -128,7 +142,7 @@ class ViewModelMainActivity(private val apl: Application) : AndroidViewModel(apl
         }
     }
 
-     fun savePicSize(s: String) {
+    fun savePicSize(s: String) {
         Log.e(TAG, "savePicSize: $s")
         //picSize.value = Size.parseSize(s)
         viewModelScope.launch {
@@ -166,7 +180,12 @@ class ViewModelMainActivity(private val apl: Application) : AndroidViewModel(apl
 
             //get pic sizes
             try {
-                picSize.value = Size.parseSize(data?.get(stringPreferencesKey(PIC_SIZE)))
+                data?.get(stringPreferencesKey(PIC_SIZE))?.let {
+                    Size.parseSize(it)
+                        ?.also {
+                            picSize.value = it
+                        }
+                }
             } catch (e: Exception) {
                 Log.e(TAG, e.stackTraceToString())
                 tost(e.stackTraceToString())
@@ -181,6 +200,7 @@ class ViewModelMainActivity(private val apl: Application) : AndroidViewModel(apl
         }
     }
 
+
     val sizes = MutableLiveData(arrayOf<Size>())
     val sizesStrings = MutableLiveData(arrayListOf<String>())
 
@@ -189,7 +209,7 @@ class ViewModelMainActivity(private val apl: Application) : AndroidViewModel(apl
           it.toString()
         }.toTypedArray()
     }*/
-    val picSize = MutableStateFlow( Size(1280, 720))
+    val picSize = MutableStateFlow(Size(1280, 720))
 
 
 }

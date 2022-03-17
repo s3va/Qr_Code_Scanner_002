@@ -5,6 +5,8 @@
 
     <data>
 
+        <import type="android.view.View" />
+
         <variable
             name="viewmodelmainactivity"
             type="tk.kvakva.qrcodescanner002.ViewModelMainActivity" />
@@ -90,5 +92,17 @@
             app:layout_constraintStart_toEndOf="@+id/photoBtn"
             tools:src="@drawable/ic_baseline_qr_code_24" />
 
+        <TextView
+            android:id="@+id/qrResultTv"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@{viewmodelmainactivity.qrTvTx}"
+            android:textIsSelectable="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
+
+    <!--    android:visibility="@{viewmodelmainactivity.qrTvVis ? View.VISIBLE : View.GONE}"-->
