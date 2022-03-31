@@ -31,7 +31,9 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.documentfile.provider.DocumentFile
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -122,11 +124,13 @@ class MainActivity : AppCompatActivity() {
         }
 
         lifecycleScope.launch {
-            viewModelMaAc.flashActive.collect {
-                if (it)
-                    camera?.cameraControl?.enableTorch(true)
-                else
-                    camera?.cameraControl?.enableTorch(false)
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                viewModelMaAc.flashActive.collect {
+                    if (it)
+                        camera?.cameraControl?.enableTorch(true)
+                    else
+                        camera?.cameraControl?.enableTorch(false)
+                }
             }
         }
 
