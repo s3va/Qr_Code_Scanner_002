@@ -7,4 +7,7 @@
     <string name="open_options_fragment_menu">Open options fragment(menu)</string>
     <string name="select_directory">Select Directory</string>
     <string name="flash_spin_spick">Flash spinner</string>
+    <string name="scan_picture">scan picture</string>
+    <string name="scan_photo_at_device">scan photo at device</string>
+    <string name="on_device_image_view">On device image view</string>
 </resources>

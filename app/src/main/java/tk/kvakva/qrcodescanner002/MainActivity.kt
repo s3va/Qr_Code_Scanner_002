@@ -5,7 +5,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
-import android.graphics.ImageFormat
+import android.graphics.*
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.params.StreamConfigurationMap
 import android.media.MediaRecorder
@@ -13,6 +13,7 @@ import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
 import android.util.Size
 import android.view.Menu
@@ -26,11 +27,13 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.camera.camera2.interop.Camera2CameraInfo
 import androidx.camera.core.*
+import androidx.camera.core.Camera
 import androidx.camera.core.ImageCapture
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.documentfile.provider.DocumentFile
+import androidx.exifinterface.media.ExifInterface
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -42,6 +45,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import tk.kvakva.qrcodescanner002.databinding.ActivityMainBinding
 import java.io.File
+import java.io.IOException
 import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.ExecutorService
@@ -105,9 +109,98 @@ class MainActivity : AppCompatActivity() {
         contentResolver.takePersistableUriPermission(uri, takeFlags)
     }
 
+    private var picpicker = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { picUri ->
+        if (picUri == null) {
+            Toast.makeText(this, "No PicTure Selected!", Toast.LENGTH_LONG).show()
+        } else {            // binding.picImageView.setImageURI(picUri)
+
+            val mBitmap: Bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                ImageDecoder.decodeBitmap(ImageDecoder.createSource(contentResolver, picUri))
+            } else {
+
+                val m = Matrix()
+                contentResolver.openInputStream(picUri)?.use { inStream ->
+                    ExifInterface(inStream).run {
+                        m.postRotate(rotationDegrees.toFloat())
+                        // If lat/long is null, fall back to the coordinates (0, 0).
+                        //val latLong = latLong ?: doubleArrayOf(0.0, 0.0)
+                    }
+
+                }
+                val b = MediaStore.Images.Media.getBitmap(contentResolver, picUri)
+                Bitmap.createBitmap(b, 0, 0, b.width, b.height, m, true)
+            }
+
+//            val mBitmap: Bitmap = BitmapFactory
+//                .decodeStream(
+//                    contentResolver
+//                        .openInputStream(
+//                            picUri
+//                        )
+//                )
+
+            val bitmap = mBitmap.copy(Bitmap.Config.ARGB_8888, true)
+            val canvas = Canvas(bitmap)
+            val paint = Paint()
+            paint.color = Color.RED
+            paint.strokeWidth = 10f
+            paint.style = Paint.Style.STROKE
+            paint.alpha = 50
+
+            binding.picImageView.setImageBitmap(bitmap)
+            binding.picImageView.visibility = View.VISIBLE
+            val image: InputImage
+            try { //image = InputImage.fromFilePath(this, picUri)
+                image = InputImage.fromBitmap(bitmap, 0)
+                Log.e(TAG, "${image.height}x${image.width}")
+                //val scanner = BarcodeScanning.getClient()
+                val result = scanner.process(image)
+                    .addOnSuccessListener { barcodes ->
+                        Log.e(TAG, "////////////\\\\\\\\ scanBarcodes: size-> ${barcodes.size}")
+                        viewModelMaAc.qrTvTxSet("")
+                        for (barcode in barcodes) {
+                            val bounds = barcode.boundingBox
+                            val corners = barcode.cornerPoints
+
+                            Log.e(TAG, bounds.toString())
+                            if (bounds != null) {
+                                Log.e(TAG, "**** $bounds")
+                                canvas.drawRect(bounds, paint)
+                                canvas.drawLine(0f, 0f, 100f, 100f, paint)
+                            }
+
+                            binding.picImageView.invalidate()
+                            val rawValue = barcode.rawValue
+                            viewModelMaAc.qrTvTxSet(viewModelMaAc.qrTvTx.value + "\n--------\n" + rawValue)
+                            Log.e(TAG, "scanBarcodes: barcode.rawValue ====== ${barcode.rawValue}")
+                            val valueType = barcode.valueType
+                            when (valueType) {
+                                Barcode.TYPE_WIFI -> {
+                                    val ssid = barcode.wifi!!.ssid
+                                    val password = barcode.wifi!!.password
+                                    val type = barcode.wifi!!.encryptionType
+                                }
+                                Barcode.TYPE_URL -> {
+                                    val title = barcode.url!!.title
+                                    val url = barcode.url!!.url
+                                }
+                            }
+                        }
+                    }
+                    .addOnFailureListener {
+                        Log.e(TAG, "scanBarcodes: ${it.stackTraceToString()}")
+                    }
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+        }
+    }
 
     lateinit var binding: ActivityMainBinding
 
+    //@RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //setContentView(R.layout.activity_main)
@@ -209,6 +302,25 @@ class MainActivity : AppCompatActivity() {
                 delQrAnalyzer()
         }
 
+
+        viewModelMaAc.qrTvVis.observe(this) {
+            if (it) {
+                binding.qrResultTv.setBackgroundResource(android.R.drawable.editbox_background)
+            } else {
+                binding.qrResultTv.background = null
+            }
+        }
+
+        binding.qrResultTv.setOnClickListener {
+            viewModelMaAc.qrTvVis.value = !viewModelMaAc.qrTvVis.value!!
+        }
+
+        binding.scanPhotoBtn.setOnClickListener {
+            picpicker.launch("image/*")
+        }
+        binding.picImageView.setOnClickListener {
+            it.visibility = View.GONE
+        }
     }
 
     lateinit var myMenu: Menu
@@ -283,12 +395,28 @@ class MainActivity : AppCompatActivity() {
             try {
                 // Unbind use cases before rebinding
                 cameraProvider?.unbindAll()
+                if (viewModelMaAc.qrScnActive.value == true) {
+                    if (imageAnalyzer != null)
+                        cameraProvider?.unbind(imageAnalyzer)
 
-                // Bind use cases to camera
-                camera = cameraProvider?.bindToLifecycle(
-                    this, cameraSelector, preview, imageCapture //, imageAnalyzer
-                    //this, cameraSelector, preview, imageCapture, videoCapture
-                )
+                    imageAnalyzer = ImageAnalysis.Builder()
+                        .build()
+                        .also {
+                            it.setAnalyzer(cameraExecutor) { iprx ->
+                                scanBarcodes(iprx)
+                            }
+                        }
+                    camera = cameraProvider?.bindToLifecycle(
+                        this, cameraSelector, preview, imageCapture, imageAnalyzer
+                        //this, cameraSelector, preview, imageCapture, videoCapture
+                    )
+                } else {
+                    // Bind use cases to camera
+                    camera = cameraProvider?.bindToLifecycle(
+                        this, cameraSelector, preview, imageCapture //, imageAnalyzer
+                        //this, cameraSelector, preview, imageCapture, videoCapture
+                    )
+                }
                 camera?.let { camera ->
                     val cameraCaractristics =
                         Camera2CameraInfo.extractCameraCharacteristics(camera.cameraInfo)
@@ -448,6 +576,12 @@ class MainActivity : AppCompatActivity() {
 
         if (i.image == null)
             return
+        Log.e(
+            TAG,
+            "scanBarcodes:\nHxW -> ${i.height}X${i.width}\nFormat:${i.format} 0x${
+                i.format.toString(16)
+            }\n---------------"
+        )
         val image = InputImage.fromMediaImage(i.image!!, i.imageInfo.rotationDegrees)
         // [START set_detector_options]
         val options = BarcodeScannerOptions.Builder()
@@ -480,7 +614,7 @@ class MainActivity : AppCompatActivity() {
 
                     val rawValue = barcode.rawValue
 
-                    viewModelMaAc.qrTvTxSet(viewModelMaAc.qrTvTx.value + "\n--------\n" + rawValue)
+                    viewModelMaAc.qrTvTxSet(viewModelMaAc.qrTvTx.value + "--------\n" + rawValue + "\n")
 
                     Log.e(TAG, "scanBarcodes: barcode.rawValue ====== ${barcode.rawValue}")
                     val valueType = barcode.valueType
@@ -497,11 +631,11 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 }
-                i.close()
                 if (barcodes.size > 0) {
                     delQrAnalyzer()
                     viewModelMaAc.qrScnOff()
                 }
+                i.close()
                 // [END get_barcodes]
                 // [END_EXCLUDE]
             }
@@ -524,6 +658,7 @@ class MainActivity : AppCompatActivity() {
             cameraProvider?.unbind(imageAnalyzer)
 
         imageAnalyzer = ImageAnalysis.Builder()
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .build()
             .also {
                 it.setAnalyzer(cameraExecutor) { iprx ->

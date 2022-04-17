@@ -39,8 +39,9 @@ class ViewModelMainActivity(private val apl: Application) : AndroidViewModel(apl
         _qrTvTx.value = s
     }
 
-    private val _qrTvVis = MutableLiveData(false)
-    val qrTvVis: LiveData<Boolean> = _qrTvVis
+    val qrTvVis = MutableLiveData(false)
+//    private val _qrTvVis = MutableLiveData(false)
+//    val qrTvVis: LiveData<Boolean> = _qrTvVis
 
     //    private val _flashActive = MutableLiveData(false)
 //    val flashActive: LiveData<Boolean>
