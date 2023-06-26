@@ -12,7 +12,6 @@ import android.media.Image
 import android.media.MediaRecorder
 import android.net.Uri
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
@@ -26,10 +25,10 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.camera2.interop.Camera2CameraInfo
 import androidx.camera.core.*
 import androidx.camera.core.Camera
-import androidx.camera.core.ImageCapture
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
@@ -42,7 +41,6 @@ import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import tk.kvakva.qrcodescanner002.databinding.ActivityMainBinding
 import java.io.File
@@ -163,6 +161,8 @@ class MainActivity : AppCompatActivity() {
                     .addOnSuccessListener { barcodes ->
                         Log.e(TAG, "////////////\\\\\\\\ scanBarcodes: size-> ${barcodes.size}")
                         viewModelMaAc.qrTvTxSet("")
+                        viewModelMaAc.listOfScannedTexts.postValue(listOf())
+                        val r = mutableListOf<DecodedText>()
                         for (barcode in barcodes) {
                             val bounds = barcode.boundingBox
                             val corners = barcode.cornerPoints
@@ -177,9 +177,13 @@ class MainActivity : AppCompatActivity() {
                             binding.picImageView.invalidate()
                             val rawValue = barcode.rawValue
                             viewModelMaAc.qrTvTxSet(viewModelMaAc.qrTvTx.value + "\n--------\n" + rawValue)
+                            r.add(DecodedText(txt = (rawValue?:"").replace(Char(29),'\n'),selected = false))
                             Log.e(TAG, "scanBarcodes: barcode.rawValue ====== ${barcode.rawValue}")
                             val valueType = barcode.valueType
                             when (valueType) {
+                                Barcode.TYPE_CALENDAR_EVENT -> {
+
+                                }
                                 Barcode.TYPE_WIFI -> {
                                     val ssid = barcode.wifi!!.ssid
                                     val password = barcode.wifi!!.password
@@ -191,6 +195,7 @@ class MainActivity : AppCompatActivity() {
                                 }
                             }
                         }
+                        viewModelMaAc.listOfScannedTexts.postValue(r)
                     }
                     .addOnFailureListener {
                         Log.e(TAG, "scanBarcodes: ${it.stackTraceToString()}")
@@ -203,6 +208,7 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var binding: ActivityMainBinding
 
+    lateinit var recViewAdapter: ScannedCodesRecViewAdapter
     //@RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -217,6 +223,12 @@ class MainActivity : AppCompatActivity() {
             startCamera()
         } else {
             requestPermissionLauncher.launch(REQUIRED_PERMISSIONS)
+        }
+
+        recViewAdapter= ScannedCodesRecViewAdapter(::shareText)
+        binding.scannedTextsRecyclerView.adapter=recViewAdapter
+        viewModelMaAc.listOfScannedTexts.observe(this){
+            recViewAdapter.data=it
         }
 
         lifecycleScope.launch {
@@ -299,14 +311,15 @@ class MainActivity : AppCompatActivity() {
         }
 
         viewModelMaAc.qrScnActive.observe(this) {
-            if (it)
+            if (it) {
+                binding.picImageView.visibility=View.GONE
                 addQrAnalyzer()
-            else
+            } else
                 delQrAnalyzer()
         }
 
 
-        viewModelMaAc.qrTvVis.observe(this) {
+/*        viewModelMaAc.qrTvVis.observe(this) {
             if (it) {
                 binding.qrResultTv.setBackgroundResource(android.R.drawable.editbox_background)
             } else {
@@ -316,7 +329,7 @@ class MainActivity : AppCompatActivity() {
 
         binding.qrResultTv.setOnClickListener {
             viewModelMaAc.qrTvVis.value = !viewModelMaAc.qrTvVis.value!!
-        }
+        }*/
 
         binding.scanPhotoBtn.setOnClickListener {
             picpicker.launch("image/*")
@@ -609,19 +622,22 @@ class MainActivity : AppCompatActivity() {
                 // Task completed successfully
                 // [START_EXCLUDE]
                 // [START get_barcodes]
-                viewModelMaAc.qrTvTxSet("")
+                //viewModelMaAc.qrTvTxSet("")
+                viewModelMaAc.listOfScannedTexts.postValue(listOf())
+                val r = mutableListOf<DecodedText>()
                 for (barcode in barcodes) {
-
                     val bounds = barcode.boundingBox
                     val corners = barcode.cornerPoints
-
                     val rawValue = barcode.rawValue
-
-                    viewModelMaAc.qrTvTxSet(viewModelMaAc.qrTvTx.value + "--------\n" + rawValue + "\n")
-
+                    //viewModelMaAc.qrTvTxSet(viewModelMaAc.qrTvTx.value + "--------\n" + rawValue + "\n")
+                    r.add(DecodedText(txt = (rawValue?:"").replace(Char(29),'\n'),selected = false))
                     Log.e(TAG, "scanBarcodes: barcode.rawValue ====== ${barcode.rawValue}")
                     val valueType = barcode.valueType
+
                     // See API reference for complete list of supported types
+                    Log.v(TAG,"valueType = $valueType")
+                    Log.v(TAG,"raw Bytes = ${rawValue?.replace(Char(29),'\n')}")
+                    Log.v(TAG,"raw Bytes = ${barcode.rawBytes?.toList()}")
                     when (valueType) {
                         Barcode.TYPE_WIFI -> {
                             val ssid = barcode.wifi!!.ssid
@@ -634,6 +650,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 }
+                viewModelMaAc.listOfScannedTexts.postValue(r)
                 if (barcodes.size > 0) {
                     delQrAnalyzer()
                     viewModelMaAc.qrScnOff()
@@ -836,6 +853,16 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    fun shareText(text: String){
+        val sendIntent: Intent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT,text)
+            type = "text/plain"
+        }
+        val shareIntent = Intent.createChooser(sendIntent,"Send decoded text")
+        startActivity(shareIntent)
     }
 
 }

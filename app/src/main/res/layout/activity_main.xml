@@ -122,23 +122,36 @@
             app:layout_constraintStart_toEndOf="@+id/scanPhotoBtn"
             tools:src="@drawable/ic_baseline_qr_code_24" />
 
-        <TextView
-            android:id="@+id/qrResultTv"
-            android:layout_width="0dp"
+        <androidx.recyclerview.widget.RecyclerView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="4dp"
-            android:minHeight="48dp"
-            android:padding="4dp"
-            android:shadowColor="@color/white"
-            android:shadowDx="1.5"
-            android:shadowDy="1.3"
-            android:shadowRadius="1.6"
-            android:text="@{viewmodelmainactivity.qrTvTx}"
-            android:textIsSelectable="true"
+            android:id="@+id/scanned_texts_recycler_view"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:text="XXXX XXXX XXXX" />
+            android:layout_margin="4dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            android:orientation="vertical"
+
+            />
+
+<!--        <TextView-->
+<!--            android:id="@+id/qrResultTv"-->
+<!--            android:layout_width="0dp"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_margin="4dp"-->
+<!--            android:minHeight="48dp"-->
+<!--            android:padding="4dp"-->
+<!--            android:shadowColor="@color/white"-->
+<!--            android:shadowDx="1.5"-->
+<!--            android:shadowDy="1.3"-->
+<!--            android:shadowRadius="1.6"-->
+<!--            android:text="@{viewmodelmainactivity.qrTvTx}"-->
+<!--            android:textIsSelectable="true"-->
+<!--            app:layout_constraintEnd_toEndOf="parent"-->
+<!--            app:layout_constraintStart_toStartOf="parent"-->
+<!--            app:layout_constraintTop_toTopOf="parent"-->
+<!--            tools:text="XXXX XXXX XXXX" />-->
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
