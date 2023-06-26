@@ -176,9 +176,10 @@ class MainActivity : AppCompatActivity() {
 
                             binding.picImageView.invalidate()
                             val rawValue = barcode.rawValue
-                            viewModelMaAc.qrTvTxSet(viewModelMaAc.qrTvTx.value + "\n--------\n" + rawValue)
+                            //viewModelMaAc.qrTvTxSet(viewModelMaAc.qrTvTx.value + "\n--------\n" + rawValue)
                             r.add(DecodedText(txt = (rawValue?:"").replace(Char(29),'\n'),selected = false))
-                            Log.e(TAG, "scanBarcodes: barcode.rawValue ====== ${barcode.rawValue}")
+                            Log.v(TAG, "scanBarcodes: barcode.rawValue ====== ${barcode.rawValue}")
+                            Log.v(TAG, "scanBarcodes: barcode.displayValue ====== ${barcode.displayValue}")
                             val valueType = barcode.valueType
                             when (valueType) {
                                 Barcode.TYPE_CALENDAR_EVENT -> {
@@ -631,7 +632,9 @@ class MainActivity : AppCompatActivity() {
                     val rawValue = barcode.rawValue
                     //viewModelMaAc.qrTvTxSet(viewModelMaAc.qrTvTx.value + "--------\n" + rawValue + "\n")
                     r.add(DecodedText(txt = (rawValue?:"").replace(Char(29),'\n'),selected = false))
-                    Log.e(TAG, "scanBarcodes: barcode.rawValue ====== ${barcode.rawValue}")
+                    Log.v(TAG, "scanBarcodes: barcode.rawValue ====== ${barcode.rawValue}")
+                    Log.v(TAG, "scanBarcodes: barcode.displayValue ====== ${barcode.displayValue}")
+
                     val valueType = barcode.valueType
 
                     // See API reference for complete list of supported types
