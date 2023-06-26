@@ -50,6 +50,8 @@ class ScannedCodesRecViewAdapter(val sendDecodedText: (String) -> Unit) :
             binding.textView.setOnClickListener {
                 f()
             }
+
+            /// https://stackoverflow.com/questions/22653641/using-onclick-on-textview-with-selectable-text-how-to-avoid-double-click
             binding.textView.setOnFocusChangeListener { _, hasFocus ->
                 if (hasFocus) {
                     f()
