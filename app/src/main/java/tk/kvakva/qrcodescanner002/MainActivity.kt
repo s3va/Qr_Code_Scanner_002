@@ -2,6 +2,7 @@ package tk.kvakva.qrcodescanner002
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
@@ -46,6 +47,7 @@ import tk.kvakva.qrcodescanner002.databinding.ActivityMainBinding
 import java.io.File
 import java.io.IOException
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -177,19 +179,29 @@ class MainActivity : AppCompatActivity() {
                             binding.picImageView.invalidate()
                             val rawValue = barcode.rawValue
                             //viewModelMaAc.qrTvTxSet(viewModelMaAc.qrTvTx.value + "\n--------\n" + rawValue)
-                            r.add(DecodedText(txt = (rawValue?:"").replace(Char(29),'\n'),selected = false))
+                            r.add(
+                                DecodedText(
+                                    txt = (rawValue ?: "").replace(Char(29), '\n'),
+                                    selected = false
+                                )
+                            )
                             Log.v(TAG, "scanBarcodes: barcode.rawValue ====== ${barcode.rawValue}")
-                            Log.v(TAG, "scanBarcodes: barcode.displayValue ====== ${barcode.displayValue}")
+                            Log.v(
+                                TAG,
+                                "scanBarcodes: barcode.displayValue ====== ${barcode.displayValue}"
+                            )
                             val valueType = barcode.valueType
                             when (valueType) {
                                 Barcode.TYPE_CALENDAR_EVENT -> {
 
                                 }
+
                                 Barcode.TYPE_WIFI -> {
                                     val ssid = barcode.wifi!!.ssid
                                     val password = barcode.wifi!!.password
                                     val type = barcode.wifi!!.encryptionType
                                 }
+
                                 Barcode.TYPE_URL -> {
                                     val title = barcode.url!!.title
                                     val url = barcode.url!!.url
@@ -210,6 +222,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var binding: ActivityMainBinding
 
     lateinit var recViewAdapter: ScannedCodesRecViewAdapter
+
     //@RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -226,10 +239,10 @@ class MainActivity : AppCompatActivity() {
             requestPermissionLauncher.launch(REQUIRED_PERMISSIONS)
         }
 
-        recViewAdapter= ScannedCodesRecViewAdapter(::shareText)
-        binding.scannedTextsRecyclerView.adapter=recViewAdapter
-        viewModelMaAc.listOfScannedTexts.observe(this){
-            recViewAdapter.data=it
+        recViewAdapter = ScannedCodesRecViewAdapter(::shareText)
+        binding.scannedTextsRecyclerView.adapter = recViewAdapter
+        viewModelMaAc.listOfScannedTexts.observe(this) {
+            recViewAdapter.data = it
         }
 
         lifecycleScope.launch {
@@ -313,24 +326,24 @@ class MainActivity : AppCompatActivity() {
 
         viewModelMaAc.qrScnActive.observe(this) {
             if (it) {
-                binding.picImageView.visibility=View.GONE
+                binding.picImageView.visibility = View.GONE
                 addQrAnalyzer()
             } else
                 delQrAnalyzer()
         }
 
 
-/*        viewModelMaAc.qrTvVis.observe(this) {
-            if (it) {
-                binding.qrResultTv.setBackgroundResource(android.R.drawable.editbox_background)
-            } else {
-                binding.qrResultTv.background = null
-            }
-        }
+        /*        viewModelMaAc.qrTvVis.observe(this) {
+                    if (it) {
+                        binding.qrResultTv.setBackgroundResource(android.R.drawable.editbox_background)
+                    } else {
+                        binding.qrResultTv.background = null
+                    }
+                }
 
-        binding.qrResultTv.setOnClickListener {
-            viewModelMaAc.qrTvVis.value = !viewModelMaAc.qrTvVis.value!!
-        }*/
+                binding.qrResultTv.setOnClickListener {
+                    viewModelMaAc.qrTvVis.value = !viewModelMaAc.qrTvVis.value!!
+                }*/
 
         binding.scanPhotoBtn.setOnClickListener {
             picpicker.launch("image/*")
@@ -357,6 +370,7 @@ class MainActivity : AppCompatActivity() {
                 dirpicker.launch(null)
                 true
             }
+
             R.id.select_size -> {
                 if (binding.previewView.visibility == View.VISIBLE) {
                     binding.previewView.visibility = View.INVISIBLE
@@ -367,6 +381,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 true
             }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -549,8 +564,29 @@ class MainActivity : AppCompatActivity() {
                     .build()
             }
         } ?: ImageCapture.OutputFileOptions
-            .Builder(File(filesDir, datelocaltimestring() + ".jpeg"))
+            .Builder(
+                contentResolver,
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                ContentValues().apply {
+                    put(
+                        MediaStore.MediaColumns.DISPLAY_NAME,
+                        LocalDateTime.now().format(DateTimeFormatter.ofPattern(FILENAME_FORMAT))
+                    )
+                    put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+                    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+                        put(
+                            MediaStore.Images.Media.RELATIVE_PATH,
+                            "Pictures/" + resources.getString(R.string.app_name)
+                        ) //SevasCameraApp")
+                    }
+                }//contentValues
+            )
             .build()
+
+
+        //ImageCapture.OutputFileOptions
+        //    .Builder(File(filesDir, datelocaltimestring() + ".jpeg"))
+        //    .build()
 
 
         //val photoFile =
@@ -631,22 +667,28 @@ class MainActivity : AppCompatActivity() {
                     val corners = barcode.cornerPoints
                     val rawValue = barcode.rawValue
                     //viewModelMaAc.qrTvTxSet(viewModelMaAc.qrTvTx.value + "--------\n" + rawValue + "\n")
-                    r.add(DecodedText(txt = (rawValue?:"").replace(Char(29),'\n'),selected = false))
+                    r.add(
+                        DecodedText(
+                            txt = (rawValue ?: "").replace(Char(29), '\n'),
+                            selected = false
+                        )
+                    )
                     Log.v(TAG, "scanBarcodes: barcode.rawValue ====== ${barcode.rawValue}")
                     Log.v(TAG, "scanBarcodes: barcode.displayValue ====== ${barcode.displayValue}")
 
                     val valueType = barcode.valueType
 
                     // See API reference for complete list of supported types
-                    Log.v(TAG,"valueType = $valueType")
-                    Log.v(TAG,"raw Bytes = ${rawValue?.replace(Char(29),'\n')}")
-                    Log.v(TAG,"raw Bytes = ${barcode.rawBytes?.toList()}")
+                    Log.v(TAG, "valueType = $valueType")
+                    Log.v(TAG, "raw Bytes = ${rawValue?.replace(Char(29), '\n')}")
+                    Log.v(TAG, "raw Bytes = ${barcode.rawBytes?.toList()}")
                     when (valueType) {
                         Barcode.TYPE_WIFI -> {
                             val ssid = barcode.wifi!!.ssid
                             val password = barcode.wifi!!.password
                             val type = barcode.wifi!!.encryptionType
                         }
+
                         Barcode.TYPE_URL -> {
                             val title = barcode.url!!.title
                             val url = barcode.url!!.url
@@ -658,17 +700,17 @@ class MainActivity : AppCompatActivity() {
                     delQrAnalyzer()
                     viewModelMaAc.qrScnOff()
                     if (i.format == ImageFormat.YUV_420_888) {
-                        val b0 =Bitmap.createBitmap(i.width, i.height, Bitmap.Config.ARGB_8888)
+                        val b0 = Bitmap.createBitmap(i.width, i.height, Bitmap.Config.ARGB_8888)
 //                            if (i.imageInfo.rotationDegrees == 90 || i.imageInfo.rotationDegrees == 270) {
 //                                Bitmap.createBitmap(i.height, i.width, Bitmap.Config.ARGB_8888)
 //                            } else {
 //                                Bitmap.createBitmap(i.width, i.height, Bitmap.Config.ARGB_8888)
 //                            }
                         mYuvToRgbConverter.yuvToRgb(i.image!!, b0)
-                        val b = if(i.imageInfo.rotationDegrees>0){
+                        val b = if (i.imageInfo.rotationDegrees > 0) {
                             val m = Matrix()
                             m.postRotate(i.imageInfo.rotationDegrees.toFloat())
-                            Bitmap.createBitmap(b0,0,0,i.width,i.height,m,true)
+                            Bitmap.createBitmap(b0, 0, 0, i.width, i.height, m, true)
                         } else {
                             b0
                         }
@@ -782,16 +824,19 @@ class MainActivity : AppCompatActivity() {
                     outputStride = 1
                     outputOffset = 0
                 }
+
                 1 -> {
                     outputStride = 2
                     // For NV21 format, U is in odd-numbered indices
                     outputOffset = pixelCount + 1
                 }
+
                 2 -> {
                     outputStride = 2
                     // For NV21 format, V is in even-numbered indices
                     outputOffset = pixelCount
                 }
+
                 else -> {
                     // Image contains more than 3 planes, something strange is going on
                     return@forEachIndexed
@@ -858,13 +903,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun shareText(text: String){
+    fun shareText(text: String) {
         val sendIntent: Intent = Intent().apply {
             action = Intent.ACTION_SEND
-            putExtra(Intent.EXTRA_TEXT,text)
+            putExtra(Intent.EXTRA_TEXT, text)
             type = "text/plain"
         }
-        val shareIntent = Intent.createChooser(sendIntent,"Send decoded text")
+        val shareIntent = Intent.createChooser(sendIntent, "Send decoded text")
         startActivity(shareIntent)
     }
 
