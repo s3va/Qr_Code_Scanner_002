@@ -7,7 +7,18 @@ import tk.kvakva.qrcodescanner002.databinding.CodeItemBinding
 
 //import tk.kvakva.qrcodescanner002.databinding.CodeItemBinding
 
-data class DecodedText(val txt: String, var selected: Boolean)
+data class DecodedText(
+    // barcode.rawValue
+    val txt: String,
+   // var selected: Boolean = false,
+    var expanded: Boolean = false,
+    // barcode.rawBytes
+    var rawBytes: String = "",
+    // barcode.displayValue
+    var displayVl: String = "",
+    var fomrat: String = "",
+    var type: String = "",
+)
 
 class ScannedCodesRecViewAdapter(val sendDecodedText: (String) -> Unit) :
     RecyclerView.Adapter<ScannedCodesRecViewAdapter.CodeViewHolder>() {
@@ -26,43 +37,58 @@ class ScannedCodesRecViewAdapter(val sendDecodedText: (String) -> Unit) :
 
     override fun onBindViewHolder(holder: CodeViewHolder, position: Int) {
         holder.bind(data[position], sendDecodedText)
+        holder.binding.button.setOnLongClickListener {
+            data[position].expanded=!data[position].expanded
+            notifyItemChanged(position)
+//                if(item.expanded){
+//                    binding.dspTxtLl.visibility= View.VISIBLE
+//                    binding.rawBytesLl.visibility= View.VISIBLE
+//                }else{
+//                    binding.dspTxtLl.visibility= View.GONE
+//                    binding.rawBytesLl.visibility= View.GONE
+//                }
+            true
+        }
+
+        /// https://stackoverflow.com/questions/22653641/using-onclick-on-textview-with-selectable-text-how-to-avoid-double-click
+//        holder.binding.textView.setOnFocusChangeListener { _, hasFocus ->
+//            if (hasFocus) {
+//                data[position].selected=!data[position].selected
+//                notifyItemChanged(position)
+//            }
+//        }
+        holder.binding.executePendingBindings()
+
+
     }
 
     class CodeViewHolder private constructor(val binding: CodeItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(item: DecodedText, sendDecodedText: (String) -> Unit) {
+
             binding.text = item
 
-            if (item.selected) {
-                binding.root.setBackgroundResource(android.R.drawable.editbox_background)
-            } else {
-                binding.root.background = null
-            }
-            fun f(){
-                if (!item.selected) {
-                    item.selected = true
-                    binding.root.setBackgroundResource(android.R.drawable.editbox_background)
-                } else {
-                    item.selected = false
-                    binding.root.background = null
-                }
-            }
-            binding.textView.setOnClickListener {
-                f()
-            }
+//            if (item.selected) {
+//                binding.root.setBackgroundResource(android.R.drawable.editbox_background)
+//            } else {
+//                binding.root.background = null
+//            }
+//            fun f() {
+//                if (!item.selected) {
+//                    item.selected = true
+//                    binding.root.setBackgroundResource(android.R.drawable.editbox_background)
+//                } else {
+//                    item.selected = false
+//                    binding.root.background = null
+//                }
+//            }
 
-            /// https://stackoverflow.com/questions/22653641/using-onclick-on-textview-with-selectable-text-how-to-avoid-double-click
-            binding.textView.setOnFocusChangeListener { _, hasFocus ->
-                if (hasFocus) {
-                    f()
-                }
-            }
             binding.button.setOnClickListener {
                 //if (vh.adapterPosition != RecyclerView.NO_POSITION){
                 sendDecodedText(item.txt)
                 //}
             }
-            binding.executePendingBindings()
+
         }
 
         companion object {

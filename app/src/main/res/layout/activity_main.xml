@@ -90,7 +90,6 @@
             app:srcCompat="@drawable/ic_baseline_camera_alt_24"
             app:threePictures="@{viewmodelmainactivity.photoAction}" />
 
-
         <Button
             android:id="@+id/scanPhotoBtn"
             android:layout_width="wrap_content"
@@ -123,17 +122,20 @@
             tools:src="@drawable/ic_baseline_qr_code_24" />
 
         <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/scanned_texts_recycler_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/scanned_texts_recycler_view"
+            app:layout_constrainedHeight="true"
+            android:layout_margin="4dp"
+            android:orientation="vertical"
+            app:backgroundResource="@{viewmodelmainactivity.qrTvVis? android.R.drawable.editbox_background : 0 }"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_constraintBottom_toTopOf="@id/scanPhotoBtn"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            android:layout_margin="4dp"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            android:orientation="vertical"
 
-            />
+            app:layout_constraintVertical_bias="0.0" />
 
 <!--        <TextView-->
 <!--            android:id="@+id/qrResultTv"-->

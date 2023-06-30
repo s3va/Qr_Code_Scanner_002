@@ -11,6 +11,14 @@
                    android:icon="@android:drawable/ic_menu_directions"
 
            />-->
+
+    <item
+        android:id="@+id/show_scanned_results"
+        android:icon="@drawable/baseline_visibility_24"
+        android:title="@string/show_scanned_results"
+        app:showAsAction="ifRoom"
+        />
+
     <item
         android:id="@+id/select_dir"
         android:icon="@drawable/ic_baseline_folder_open_24"

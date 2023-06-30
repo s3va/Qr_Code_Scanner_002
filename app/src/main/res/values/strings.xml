@@ -11,4 +11,5 @@
     <string name="scan_photo_at_device">scan photo at device</string>
     <string name="on_device_image_view">On device image view</string>
     <string name="share_text">share text</string>
+    <string name="show_scanned_results">Show scanned results</string>
 </resources>

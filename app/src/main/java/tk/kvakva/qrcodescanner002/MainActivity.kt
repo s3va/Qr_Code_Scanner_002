@@ -23,6 +23,7 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -38,13 +39,13 @@ import androidx.exifinterface.media.ExifInterface
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.google.android.material.divider.MaterialDividerItemDecoration
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import kotlinx.coroutines.launch
 import tk.kvakva.qrcodescanner002.databinding.ActivityMainBinding
-import java.io.File
 import java.io.IOException
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -68,7 +69,7 @@ class MainActivity : AppCompatActivity() {
     private val mYuvToRgbConverter by lazy { YuvToRgbConverter(this) }
 
     //    private lateinit var outputDirectory: File
-    val scanner = BarcodeScanning.getClient(
+    private val scanner = BarcodeScanning.getClient(
         BarcodeScannerOptions.Builder()
             .setBarcodeFormats(
                 Barcode.FORMAT_ALL_FORMATS
@@ -162,53 +163,57 @@ class MainActivity : AppCompatActivity() {
                 val result = scanner.process(image)
                     .addOnSuccessListener { barcodes ->
                         Log.e(TAG, "////////////\\\\\\\\ scanBarcodes: size-> ${barcodes.size}")
-                        viewModelMaAc.qrTvTxSet("")
-                        viewModelMaAc.listOfScannedTexts.postValue(listOf())
-                        val r = mutableListOf<DecodedText>()
-                        for (barcode in barcodes) {
-                            val bounds = barcode.boundingBox
-                            val corners = barcode.cornerPoints
+                        fillData(barcodes)
+//                        viewModelMaAc.qrTvTxSet("")
+//                        viewModelMaAc.listOfScannedTexts.postValue(listOf())
+//                        val r = mutableListOf<DecodedText>()
+//                        for (barcode in barcodes) {
+//
+//                            val rawValue = barcode.rawValue
+//                            //viewModelMaAc.qrTvTxSet(viewModelMaAc.qrTvTx.value + "\n--------\n" + rawValue)
+//                            r.add(
+//                                DecodedText(
+//                                    txt = (rawValue ?: "").replace(Char(29), '\n'),
+//                                )
+//                            )
+//                            Log.v(TAG, "scanBarcodes: barcode.rawValue ====== ${barcode.rawValue}")
+//                            Log.v(
+//                                TAG,
+//                                "scanBarcodes: barcode.displayValue ====== ${barcode.displayValue}"
+//                            )
+//                            val valueType = barcode.valueType
+//                            when (valueType) {
+//                                Barcode.TYPE_CALENDAR_EVENT -> {
+//
+//                                }
+//
+//                                Barcode.TYPE_WIFI -> {
+//                                    val ssid = barcode.wifi!!.ssid
+//                                    val password = barcode.wifi!!.password
+//                                    val type = barcode.wifi!!.encryptionType
+//                                }
+//
+//                                Barcode.TYPE_URL -> {
+//                                    val title = barcode.url!!.title
+//                                    val url = barcode.url!!.url
+//                                }
+//                            }
+//                        }
+                        if(barcodes.size>0) {
+                            for (barcode in barcodes) {
+                                val bounds = barcode.boundingBox
+                                val corners = barcode.cornerPoints
 
-                            Log.e(TAG, bounds.toString())
-                            if (bounds != null) {
-                                Log.e(TAG, "**** $bounds")
-                                canvas.drawRect(bounds, paint)
-                                canvas.drawLine(0f, 0f, 100f, 100f, paint)
-                            }
-
-                            binding.picImageView.invalidate()
-                            val rawValue = barcode.rawValue
-                            //viewModelMaAc.qrTvTxSet(viewModelMaAc.qrTvTx.value + "\n--------\n" + rawValue)
-                            r.add(
-                                DecodedText(
-                                    txt = (rawValue ?: "").replace(Char(29), '\n'),
-                                    selected = false
-                                )
-                            )
-                            Log.v(TAG, "scanBarcodes: barcode.rawValue ====== ${barcode.rawValue}")
-                            Log.v(
-                                TAG,
-                                "scanBarcodes: barcode.displayValue ====== ${barcode.displayValue}"
-                            )
-                            val valueType = barcode.valueType
-                            when (valueType) {
-                                Barcode.TYPE_CALENDAR_EVENT -> {
-
+                                Log.e(TAG, bounds.toString())
+                                if (bounds != null) {
+                                    Log.e(TAG, "**** $bounds")
+                                    canvas.drawRect(bounds, paint)
+                                    canvas.drawLine(0f, 0f, 100f, 100f, paint)
                                 }
-
-                                Barcode.TYPE_WIFI -> {
-                                    val ssid = barcode.wifi!!.ssid
-                                    val password = barcode.wifi!!.password
-                                    val type = barcode.wifi!!.encryptionType
-                                }
-
-                                Barcode.TYPE_URL -> {
-                                    val title = barcode.url!!.title
-                                    val url = barcode.url!!.url
-                                }
+                                binding.picImageView.invalidate()
                             }
                         }
-                        viewModelMaAc.listOfScannedTexts.postValue(r)
+                        //viewModelMaAc.listOfScannedTexts.postValue(r)
                     }
                     .addOnFailureListener {
                         Log.e(TAG, "scanBarcodes: ${it.stackTraceToString()}")
@@ -241,6 +246,10 @@ class MainActivity : AppCompatActivity() {
 
         recViewAdapter = ScannedCodesRecViewAdapter(::shareText)
         binding.scannedTextsRecyclerView.adapter = recViewAdapter
+        binding.scannedTextsRecyclerView.addItemDecoration(MaterialDividerItemDecoration(this,LinearLayout.VERTICAL).apply {
+            this.isLastItemDecorated=false
+            this.dividerThickness=10
+        })
         viewModelMaAc.listOfScannedTexts.observe(this) {
             recViewAdapter.data = it
         }
@@ -351,6 +360,9 @@ class MainActivity : AppCompatActivity() {
         binding.picImageView.setOnClickListener {
             it.visibility = View.GONE
         }
+
+
+
     }
 
     lateinit var myMenu: Menu
@@ -361,6 +373,12 @@ class MainActivity : AppCompatActivity() {
         if (viewModelMaAc.dirUri.value != null)
             myMenu.findItem(R.id.select_dir).setIcon(R.drawable.ic_baseline_folder_24)
 
+        viewModelMaAc.qrTvVis.observe(this){scanned_results_visible: Boolean ->
+            myMenu.findItem(R.id.show_scanned_results).setIcon(when(scanned_results_visible){
+                true -> R.drawable.baseline_visibility_24
+                false -> R.drawable.baseline_visibility_off_24
+            })
+        }
         return true
     }
 
@@ -382,6 +400,10 @@ class MainActivity : AppCompatActivity() {
                 true
             }
 
+            R.id.show_scanned_results -> {
+                viewModelMaAc.qrTvVis.value=!(viewModelMaAc.qrTvVis.value?:false)
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -655,47 +677,12 @@ class MainActivity : AppCompatActivity() {
         // [START run_detector]
         val result = scanner.process(image)
             .addOnSuccessListener { barcodes ->
-                Log.e(TAG, "//////////// scanBarcodes: $barcodes")
                 // Task completed successfully
                 // [START_EXCLUDE]
                 // [START get_barcodes]
                 //viewModelMaAc.qrTvTxSet("")
-                viewModelMaAc.listOfScannedTexts.postValue(listOf())
-                val r = mutableListOf<DecodedText>()
-                for (barcode in barcodes) {
-                    val bounds = barcode.boundingBox
-                    val corners = barcode.cornerPoints
-                    val rawValue = barcode.rawValue
-                    //viewModelMaAc.qrTvTxSet(viewModelMaAc.qrTvTx.value + "--------\n" + rawValue + "\n")
-                    r.add(
-                        DecodedText(
-                            txt = (rawValue ?: "").replace(Char(29), '\n'),
-                            selected = false
-                        )
-                    )
-                    Log.v(TAG, "scanBarcodes: barcode.rawValue ====== ${barcode.rawValue}")
-                    Log.v(TAG, "scanBarcodes: barcode.displayValue ====== ${barcode.displayValue}")
+                fillData(barcodes)
 
-                    val valueType = barcode.valueType
-
-                    // See API reference for complete list of supported types
-                    Log.v(TAG, "valueType = $valueType")
-                    Log.v(TAG, "raw Bytes = ${rawValue?.replace(Char(29), '\n')}")
-                    Log.v(TAG, "raw Bytes = ${barcode.rawBytes?.toList()}")
-                    when (valueType) {
-                        Barcode.TYPE_WIFI -> {
-                            val ssid = barcode.wifi!!.ssid
-                            val password = barcode.wifi!!.password
-                            val type = barcode.wifi!!.encryptionType
-                        }
-
-                        Barcode.TYPE_URL -> {
-                            val title = barcode.url!!.title
-                            val url = barcode.url!!.url
-                        }
-                    }
-                }
-                viewModelMaAc.listOfScannedTexts.postValue(r)
                 if (barcodes.size > 0) {
                     delQrAnalyzer()
                     viewModelMaAc.qrScnOff()
@@ -744,6 +731,114 @@ class MainActivity : AppCompatActivity() {
         // [END run_detector]
     }
 
+    fun fillData(barcodes: List<Barcode>){
+        //viewModelMaAc.listOfScannedTexts.postValue(listOf())
+        val r = mutableListOf<DecodedText>()
+        for (barcode: Barcode in barcodes) {
+            val bounds = barcode.boundingBox
+            val corners = barcode.cornerPoints
+
+            Log.v(TAG, "scanBarcodes: barcode.type = ${barcode.valueType}")
+            Log.v(TAG, "scanBarcodes: barcode.format = ${barcode.format}")
+            //viewModelMaAc.qrTvTxSet(viewModelMaAc.qrTvTx.value + "--------\n" + rawValue + "\n")
+            r.add(
+                DecodedText(
+                    txt = (barcode.rawValue ?: "").replace(Char(29), '\n'),
+                    rawBytes = barcode.rawBytes?.joinToString(" ") { "0x%02x".format(it) }
+                        ?: "",
+                    displayVl = barcode.displayValue ?: "",
+                    fomrat = when (barcode.format) {
+                        //      FORMAT_UNKNOWN = -1;
+                        Barcode.FORMAT_UNKNOWN -> "FORMAT_UNKNOWN"
+                        //      FORMAT_ALL_FORMATS = 0;
+                        Barcode.FORMAT_ALL_FORMATS -> "FORMAT_ALL_FORMATS"
+                        //      FORMAT_CODE_128 = 1;
+                        Barcode.FORMAT_CODE_128 -> "FORMAT_CODE_128"
+                        //      FORMAT_CODE_39 = 2;
+                        Barcode.FORMAT_CODE_39 -> "FORMAT_CODE_39"
+                        //      FORMAT_CODE_93 = 4;
+                        Barcode.FORMAT_CODE_93 -> "FORMAT_CODE_93"
+                        //      FORMAT_CODABAR = 8;
+                        Barcode.FORMAT_CODABAR -> "FORMAT_CODABAR"
+                        //      FORMAT_DATA_MATRIX = 16;
+                        Barcode.FORMAT_DATA_MATRIX -> "FORMAT_DATA_MATRIX"
+                        //      FORMAT_EAN_13 = 32;
+                        Barcode.FORMAT_EAN_13 -> "FORMAT_EAN_13"
+                        //      FORMAT_EAN_8 = 64;
+                        Barcode.FORMAT_EAN_8 -> "FORMAT_EAN_8"
+                        //      FORMAT_ITF = 128;
+                        Barcode.FORMAT_ITF -> "FORMAT_ITF"
+                        //      FORMAT_QR_CODE = 256;
+                        Barcode.FORMAT_QR_CODE -> "FORMAT_QR_CODE"
+                        //      FORMAT_UPC_A = 512;
+                        Barcode.FORMAT_UPC_A -> "FORMAT_UPC_A"
+                        //      FORMAT_UPC_E = 1024;
+                        Barcode.FORMAT_UPC_E -> "FORMAT_UPC_E"
+                        //      FORMAT_PDF417 = 2048;
+                        Barcode.FORMAT_PDF417 -> "FORMAT_PDF417"
+                        //      FORMAT_AZTEC = 4096;
+                        Barcode.FORMAT_AZTEC -> "FORMAT_AZTEC"
+                        else -> "FORMAT_UNKNOWN_AT_ALL"
+                    },
+                    type = when(barcode.valueType){
+                        // TYPE_UNKNOWN = 0;
+                        Barcode.TYPE_UNKNOWN -> "TYPE_UNKNOWN"
+                        // TYPE_CONTACT_INFO = 1;
+                        Barcode.TYPE_CONTACT_INFO -> "TYPE_CONTACT_INFO"
+                        // TYPE_EMAIL = 2;
+                        Barcode.TYPE_EMAIL -> "TYPE_EMAIL"
+                        // TYPE_ISBN = 3;
+                        Barcode.TYPE_ISBN -> "TYPE_ISBN"
+                        // TYPE_PHONE = 4;
+                        Barcode.TYPE_PHONE -> "TYPE_PHONE"
+                        // TYPE_PRODUCT = 5;
+                        Barcode.TYPE_PRODUCT -> "TYPE_PRODUCT"
+                        // TYPE_SMS = 6;
+                        Barcode.TYPE_SMS -> "TYPE_SMS"
+                        // TYPE_TEXT = 7;
+                        Barcode.TYPE_TEXT -> "TYPE_TEXT"
+                        // TYPE_URL = 8;
+                        Barcode.TYPE_URL -> "TYPE_URL"
+                        // TYPE_WIFI = 9;
+                        Barcode.TYPE_WIFI -> "TYPE_WIFI"
+                        // TYPE_GEO = 10;
+                        Barcode.TYPE_GEO -> "TYPE_GEO"
+                        // TYPE_CALENDAR_EVENT = 11;
+                        Barcode.TYPE_CALENDAR_EVENT -> "TYPE_CALENDAR_EVENT"
+                        // TYPE_DRIVER_LICENSE = 12;
+                        Barcode.TYPE_DRIVER_LICENSE -> "TYPE_DRIVER_LICENSE"
+                        else -> "unknown at all"
+                    }
+                )
+            )
+            Log.v(TAG, "scanBarcodes: barcode.rawValue ====== ${barcode.rawValue}")
+            Log.v(TAG, "scanBarcodes: barcode.displayValue ====== ${barcode.displayValue}")
+
+            val valueType = barcode.valueType
+
+            // See API reference for complete list of supported types
+            Log.v(TAG, "valueType = $valueType")
+            Log.v(TAG, "raw Bytes = ${barcode.rawValue?.replace(Char(29), '\n')}")
+            Log.v(TAG, "raw Bytes = ${barcode.rawBytes?.toList()}")
+            Log.v(
+                TAG,
+                "raw hex Bytes = ${barcode.rawBytes?.joinToString(" ") { "0x%02x".format(it) } ?: ""}"
+            )
+            when (valueType) {
+                Barcode.TYPE_WIFI -> {
+                    val ssid = barcode.wifi!!.ssid
+                    val password = barcode.wifi!!.password
+                    val type = barcode.wifi!!.encryptionType
+                }
+
+                Barcode.TYPE_URL -> {
+                    val title = barcode.url!!.title
+                    val url = barcode.url!!.url
+                }
+            }
+        }
+        viewModelMaAc.listOfScannedTexts.postValue(r)
+    }
     fun addQrAnalyzer() {
 
         if (cameraProvider == null)

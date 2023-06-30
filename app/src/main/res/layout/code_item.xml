@@ -4,6 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
+
+        <import type="android.view.View" />
+
         <variable
             name="text"
             type="tk.kvakva.qrcodescanner002.DecodedText" />
@@ -11,31 +14,128 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/textView"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:padding="4dp"
-            android:shadowColor="@color/white"
-            android:shadowDx="1.5"
-            android:shadowDy="1.3"
-            android:shadowRadius="1.6"
-            android:text="@{text.txt}"
-            android:textIsSelectable="true"
-            tools:text="VCARD,qwerqwer,qwerqwerq=qwerqwerq" />
-<!--        android:textIsSelectable="true" this was made textview onClick needs first tap twice -->
+            android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/button"
-            style="@style/Widget.App.Button.Borderless.IconOnly"
-            android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="4dp"
+                        android:text="@{text.type}"
+                        tools:text="TYPE_UNKNOWN" />
+
+                    <Space
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="4dp"
+                        android:text="@{text.fomrat}"
+                        tools:text="FORMAT_UNKNOWN" />
+                </LinearLayout>
+
+                <View
+                    android:id="@+id/divider4"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="?android:attr/listDivider" />
+
+                <TextView
+                    android:id="@+id/textView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="48dp"
+                    android:padding="4dp"
+                    android:shadowColor="@color/white"
+                    android:shadowDx="1.5"
+                    android:shadowDy="1.3"
+                    android:shadowRadius="1.6"
+                    android:text="@{text.txt}"
+                    android:textIsSelectable="true"
+                    tools:text="VCARD,qwerqwer,qwerqwerq=qwerqwerq" />
+
+            </LinearLayout>
+
+            <View
+                android:id="@+id/divider3"
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:background="?android:attr/listDivider" />
+
+            <Button
+                android:id="@+id/button"
+                style="@style/Widget.App.Button.Borderless.IconOnly"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:contentDescription="@string/share_text"
+                app:icon="@android:drawable/ic_menu_share" />
+
+        </LinearLayout>
+
+        <View
+            android:id="@+id/divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?android:attr/listDivider" />
+
+        <LinearLayout
+            android:id="@+id/dsp_txt_ll"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:contentDescription="@string/share_text"
-            app:icon="@android:drawable/ic_menu_share" />
+            android:visibility="@{text.expanded ? View.VISIBLE : View.GONE}">
 
+            <TextView
+                android:id="@+id/display_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:text="@{text.displayVl}"
+                android:textIsSelectable="true"
+                tools:text="display text qwerqwerqwer qwe rqlwek" />
+        </LinearLayout>
+
+        <View
+            android:id="@+id/divider2"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?android:attr/listDivider" />
+
+        <LinearLayout
+            android:id="@+id/raw_bytes_ll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="@{text.expanded ? View.VISIBLE : View.GONE}">
+
+            <TextView
+                android:id="@+id/raw_bytes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:fontFamily="monospace"
+                android:text="@{text.rawBytes}"
+                android:textIsSelectable="true"
+                tools:text="0x34 0x34 0x34 0x34 0x34 0x34 0x34 0x34" />
+        </LinearLayout>
     </LinearLayout>
+
+
 </layout>
