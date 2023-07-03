@@ -11,8 +11,8 @@ android {
         applicationId "tk.kvakva.qrcodescanner002"
         minSdk 21
         targetSdk 33
-        versionCode 4
-        versionName "0.0.4b"
+        versionCode 6
+        versionName "0.0.6"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -36,6 +36,7 @@ android {
         dataBinding true
     }
     namespace 'tk.kvakva.qrcodescanner002'
+    buildToolsVersion '33.0.2'
 
 }
 

@@ -12,4 +12,5 @@
     <string name="on_device_image_view">On device image view</string>
     <string name="share_text">share text</string>
     <string name="show_scanned_results">Show scanned results</string>
+    <string name="choose_picture_size">Choose picture size</string>
 </resources>

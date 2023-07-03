@@ -17,23 +17,23 @@
         android:layout_height="match_parent"
         tools:context=".MainActivity">
 
-        <Spinner
-            android:id="@+id/size_spinner"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="16dp"
-            android:contentDescription="@string/flash_spin_spick"
-            android:elevation="4dp"
-            android:minHeight="48dp"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:visibility="visible" />
+<!--        <Spinner-->
+<!--            android:id="@+id/size_spinner"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_marginStart="16dp"-->
+<!--            android:layout_marginTop="16dp"-->
+<!--            android:layout_marginEnd="16dp"-->
+<!--            android:layout_marginBottom="16dp"-->
+<!--            android:contentDescription="@string/flash_spin_spick"-->
+<!--            android:elevation="4dp"-->
+<!--            android:minHeight="48dp"-->
+<!--            android:visibility="gone"-->
+<!--            app:layout_constraintBottom_toBottomOf="parent"-->
+<!--            app:layout_constraintEnd_toEndOf="parent"-->
+<!--            app:layout_constraintStart_toStartOf="parent"-->
+<!--            app:layout_constraintTop_toTopOf="parent"-->
+<!--            tools:visibility="visible" />-->
 
         <androidx.camera.view.PreviewView
             android:id="@+id/previewView"
@@ -80,7 +80,6 @@
             android:layout_marginEnd="16dp"
             android:layout_marginBottom="16dp"
             android:contentDescription="@string/take_a_picture_or_video"
-            android:onClick="takePhoto"
             android:onLongClick="@{() -> viewmodelmainactivity.takeAVideoAction()}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/scanPhotoBtn"

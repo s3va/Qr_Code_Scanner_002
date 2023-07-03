@@ -23,14 +23,19 @@
         android:id="@+id/select_dir"
         android:icon="@drawable/ic_baseline_folder_open_24"
         android:title="@string/select_directory"
-        app:showAsAction="ifRoom"
         />
 
     <item
-        android:id="@+id/select_size"
-        android:icon="@android:drawable/picture_frame"
-        android:title="@string/select_directory"
-        app:showAsAction="ifRoom"
+        android:id="@+id/choose_size"
+        android:icon="@drawable/baseline_2mp_24"
+        android:title="@string/choose_picture_size"
         />
+
+<!--    <item-->
+<!--        android:id="@+id/select_size"-->
+<!--        android:icon="@android:drawable/picture_frame"-->
+<!--        android:title="@string/choose_picture_size"-->
+<!--        app:showAsAction="ifRoom"-->
+<!--        />-->
 
 </menu>

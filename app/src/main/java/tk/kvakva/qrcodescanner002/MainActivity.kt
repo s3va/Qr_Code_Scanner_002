@@ -21,12 +21,11 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.camera2.interop.Camera2CameraInfo
 import androidx.camera.core.*
@@ -133,7 +132,14 @@ class MainActivity : AppCompatActivity() {
                     }
 
                 }
-                val b = MediaStore.Images.Media.getBitmap(contentResolver, picUri)
+                //val b = MediaStore.Images.Media.getBitmap(contentResolver, picUri)
+                //                                                     API 29  Android 10
+                val b = if(Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                    MediaStore.Images.Media.getBitmap(contentResolver, picUri)
+                } else {
+                    ImageDecoder.decodeBitmap(ImageDecoder.createSource(contentResolver, picUri))
+                }
+
                 Bitmap.createBitmap(b, 0, 0, b.width, b.height, m, true)
             }
 
@@ -199,7 +205,7 @@ class MainActivity : AppCompatActivity() {
 //                                }
 //                            }
 //                        }
-                        if(barcodes.size>0) {
+                        if (barcodes.size > 0) {
                             for (barcode in barcodes) {
                                 val bounds = barcode.boundingBox
                                 val corners = barcode.cornerPoints
@@ -246,13 +252,19 @@ class MainActivity : AppCompatActivity() {
 
         recViewAdapter = ScannedCodesRecViewAdapter(::shareText)
         binding.scannedTextsRecyclerView.adapter = recViewAdapter
-        binding.scannedTextsRecyclerView.addItemDecoration(MaterialDividerItemDecoration(this,LinearLayout.VERTICAL).apply {
-            this.isLastItemDecorated=false
-            this.dividerThickness=10
-        })
+        binding.scannedTextsRecyclerView.addItemDecoration(
+            MaterialDividerItemDecoration(
+                this,
+                LinearLayout.VERTICAL
+            ).apply {
+                this.isLastItemDecorated = false
+                this.dividerThickness = 10
+            })
         viewModelMaAc.listOfScannedTexts.observe(this) {
             recViewAdapter.data = it
         }
+
+        binding.photoBtn.setOnClickListener(::takePhoto)
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
@@ -265,73 +277,73 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        viewModelMaAc.sizesStrings.value?.let {
-            Log.e(TAG, "spinner:!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! it.asList() $it")
+//        viewModelMaAc.sizesStrings.value?.let {
+//            Log.e(TAG, "spinner:!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! it.asList() $it")
+//
+//            ArrayAdapter<String>(
+//                this, android.R.layout.simple_spinner_item, android.R.id.text1,
+//                it
+//            ).also {
+//                binding.sizeSpinner.adapter = it
+//                Log.e(
+//                    TAG,
+//                    "spinner:!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! viewModelMaAc.sizesStrings.value?.asList( ${viewModelMaAc.sizesStrings.value}"
+//                )
+//            }
+//        }
 
-            ArrayAdapter<String>(
-                this, android.R.layout.simple_spinner_item, android.R.id.text1,
-                it
-            ).also {
-                binding.sizeSpinner.adapter = it
-                Log.e(
-                    TAG,
-                    "spinner:!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! viewModelMaAc.sizesStrings.value?.asList( ${viewModelMaAc.sizesStrings.value}"
-                )
-            }
-        }
-
-        binding.sizeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            /**
-             *
-             * Callback method to be invoked when an item in this view has been
-             * selected. This callback is invoked only when the newly selected
-             * position is different from the previously selected position or if
-             * there was no selected item.
-             *
-             * Implementers can call getItemAtPosition(position) if they need to access the
-             * data associated with the selected item.
-             *
-             * @param parent The AdapterView where the selection happened
-             * @param view The view within the AdapterView that was clicked
-             * @param position The position of the view in the adapter
-             * @param id The row id of the item that is selected
-             */
-            override fun onItemSelected(
-                parent: AdapterView<*>?,
-                view: View?,
-                position: Int,
-                id: Long
-            ) {
-                Log.i(
-                    TAG,
-                    "onItemSelected: position: $position, id: $id, mode: ${
-                        viewModelMaAc.sizes.value?.get(id.toInt())
-                    }"
-                )
-                viewModelMaAc.picSize.value =
-                    viewModelMaAc.sizes.value?.get(id.toInt()) ?: Size(1280, 720)
-                viewModelMaAc.savePicSize(viewModelMaAc.picSize.value.toString())
-                /*val s = resources.getStringArray(R.array.flash_mode)[id.toInt()]
-                flashMode = when (s) {
-                    "auto" -> ImageCapture.FLASH_MODE_AUTO
-                    "on" -> ImageCapture.FLASH_MODE_ON
-                    else -> ImageCapture.FLASH_MODE_OFF
-                }*/
-                startCamera()
-                //(view as TextView?)?.setTextColor(Color.RED)
-            }
-
-            /**
-             * Callback method to be invoked when the selection disappears from this
-             * view. The selection can disappear for instance when touch is activated
-             * or when the adapter becomes empty.
-             *
-             * @param parent The AdapterView that now contains no selected item.
-             */
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-                Log.i(TAG, "onNothingSelected: NOTHING")
-            }
-        }
+//        binding.sizeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+//            /**
+//             *
+//             * Callback method to be invoked when an item in this view has been
+//             * selected. This callback is invoked only when the newly selected
+//             * position is different from the previously selected position or if
+//             * there was no selected item.
+//             *
+//             * Implementers can call getItemAtPosition(position) if they need to access the
+//             * data associated with the selected item.
+//             *
+//             * @param parent The AdapterView where the selection happened
+//             * @param view The view within the AdapterView that was clicked
+//             * @param position The position of the view in the adapter
+//             * @param id The row id of the item that is selected
+//             */
+//            override fun onItemSelected(
+//                parent: AdapterView<*>?,
+//                view: View?,
+//                position: Int,
+//                id: Long
+//            ) {
+//                Log.i(
+//                    TAG,
+//                    "onItemSelected: position: $position, id: $id, mode: ${
+//                        viewModelMaAc.sizes.value?.get(id.toInt())
+//                    }"
+//                )
+//                viewModelMaAc.picSize.value =
+//                    viewModelMaAc.sizes.value?.get(id.toInt()) ?: Size(1280, 720)
+//                viewModelMaAc.savePicSize(viewModelMaAc.picSize.value.toString())
+//                /*val s = resources.getStringArray(R.array.flash_mode)[id.toInt()]
+//                flashMode = when (s) {
+//                    "auto" -> ImageCapture.FLASH_MODE_AUTO
+//                    "on" -> ImageCapture.FLASH_MODE_ON
+//                    else -> ImageCapture.FLASH_MODE_OFF
+//                }*/
+//                startCamera()
+//                //(view as TextView?)?.setTextColor(Color.RED)
+//            }
+//
+//            /**
+//             * Callback method to be invoked when the selection disappears from this
+//             * view. The selection can disappear for instance when touch is activated
+//             * or when the adapter becomes empty.
+//             *
+//             * @param parent The AdapterView that now contains no selected item.
+//             */
+//            override fun onNothingSelected(parent: AdapterView<*>?) {
+//                Log.i(TAG, "onNothingSelected: NOTHING")
+//            }
+//        }
 
         viewModelMaAc.qrScnActive.observe(this) {
             if (it) {
@@ -362,7 +374,6 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-
     }
 
     lateinit var myMenu: Menu
@@ -373,11 +384,21 @@ class MainActivity : AppCompatActivity() {
         if (viewModelMaAc.dirUri.value != null)
             myMenu.findItem(R.id.select_dir).setIcon(R.drawable.ic_baseline_folder_24)
 
-        viewModelMaAc.qrTvVis.observe(this){scanned_results_visible: Boolean ->
-            myMenu.findItem(R.id.show_scanned_results).setIcon(when(scanned_results_visible){
-                true -> R.drawable.baseline_visibility_24
-                false -> R.drawable.baseline_visibility_off_24
-            })
+        viewModelMaAc.qrTvVis.observe(this) { scanned_results_visible: Boolean ->
+            myMenu.findItem(R.id.show_scanned_results).setIcon(
+                when (scanned_results_visible) {
+                    true -> R.drawable.baseline_visibility_24
+                    false -> R.drawable.baseline_visibility_off_24
+                }
+            )
+        }
+        val chsz = myMenu.findItem(R.id.choose_size)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                viewModelMaAc.picSize.collect {
+                   chsz.title="Choose pic size($it)"
+                }
+            }
         }
         return true
     }
@@ -389,21 +410,44 @@ class MainActivity : AppCompatActivity() {
                 true
             }
 
-            R.id.select_size -> {
-                if (binding.previewView.visibility == View.VISIBLE) {
-                    binding.previewView.visibility = View.INVISIBLE
-                    binding.sizeSpinner.visibility = View.VISIBLE
-                } else {
-                    binding.previewView.visibility = View.VISIBLE
-                    binding.sizeSpinner.visibility = View.GONE
-                }
+//            R.id.select_size -> {
+//                if (binding.previewView.visibility == View.VISIBLE) {
+//                    binding.previewView.visibility = View.INVISIBLE
+//                    binding.sizeSpinner.visibility = View.VISIBLE
+//                } else {
+//                    binding.previewView.visibility = View.VISIBLE
+//                    binding.sizeSpinner.visibility = View.GONE
+//                }
+//                true
+//            }
+
+            R.id.choose_size -> {
+                Log.v(TAG, "onOptionsItemSelected: ${viewModelMaAc.picSize.value}")
+                AlertDialog.Builder(this)
+                    .setTitle("Choose pictures resolutions")
+                    .setItems(viewModelMaAc.sizesStrings.value?.toTypedArray()) { d, i ->
+                        Log.i(
+                            TAG,
+                            "onItemS: i=$i ${
+                                viewModelMaAc.sizes.value?.get(i)
+                            }"
+                        )
+                        viewModelMaAc.picSize.value =
+                            viewModelMaAc.sizes.value?.get(i) ?: Size(1280, 720)
+                        viewModelMaAc.savePicSize(viewModelMaAc.picSize.value.toString())
+                        //item.title="Choose pic size (${viewModelMaAc.picSize.value})"
+                        startCamera()
+                    }
+                    .show()
                 true
             }
 
+
             R.id.show_scanned_results -> {
-                viewModelMaAc.qrTvVis.value=!(viewModelMaAc.qrTvVis.value?:false)
+                viewModelMaAc.qrTvVis.value = !(viewModelMaAc.qrTvVis.value ?: false)
                 true
             }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -495,13 +539,14 @@ class MainActivity : AppCompatActivity() {
                         viewModelMaAc.sizesStrings.value?.addAll(it.map {
                             it.toString()
                         })
-                        (binding.sizeSpinner.adapter as ArrayAdapter<String>).notifyDataSetChanged()
+                        //(binding.sizeSpinner.adapter as ArrayAdapter<String>).notifyDataSetChanged()
                         //(binding.sizeSpinner.adapter as ArrayAdapter<String>).notifyDataSetInvalidated()
-                        binding.sizeSpinner.setSelection(
-                            viewModelMaAc.sizesStrings.value?.indexOf(
-                                viewModelMaAc.picSize.value.toString()
-                            ) ?: 0
-                        )
+//                        binding.sizeSpinner.setSelection(
+//                            viewModelMaAc.sizesStrings.value?.indexOf(
+//                                viewModelMaAc.picSize.value.toString()
+//                            ) ?: 0
+//                        )
+                        //myMenu.findItem(R.id.choose_size).title="Choose pic size (${viewModelMaAc.picSize.value})"
                         Log.e(
                             TAG,
                             "startCamera: viewModelMaAc.sizes.value ${viewModelMaAc.sizes.value?.asList()}"
@@ -731,7 +776,7 @@ class MainActivity : AppCompatActivity() {
         // [END run_detector]
     }
 
-    fun fillData(barcodes: List<Barcode>){
+    fun fillData(barcodes: List<Barcode>) {
         //viewModelMaAc.listOfScannedTexts.postValue(listOf())
         val r = mutableListOf<DecodedText>()
         for (barcode: Barcode in barcodes) {
@@ -780,7 +825,7 @@ class MainActivity : AppCompatActivity() {
                         Barcode.FORMAT_AZTEC -> "FORMAT_AZTEC"
                         else -> "FORMAT_UNKNOWN_AT_ALL"
                     },
-                    type = when(barcode.valueType){
+                    type = when (barcode.valueType) {
                         // TYPE_UNKNOWN = 0;
                         Barcode.TYPE_UNKNOWN -> "TYPE_UNKNOWN"
                         // TYPE_CONTACT_INFO = 1;
@@ -839,6 +884,7 @@ class MainActivity : AppCompatActivity() {
         }
         viewModelMaAc.listOfScannedTexts.postValue(r)
     }
+
     fun addQrAnalyzer() {
 
         if (cameraProvider == null)
