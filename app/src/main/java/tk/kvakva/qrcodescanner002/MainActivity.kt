@@ -134,7 +134,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 //val b = MediaStore.Images.Media.getBitmap(contentResolver, picUri)
                 //                                                     API 29  Android 10
-                val b = if(Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                val b = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                     MediaStore.Images.Media.getBitmap(contentResolver, picUri)
                 } else {
                     ImageDecoder.decodeBitmap(ImageDecoder.createSource(contentResolver, picUri))
@@ -396,7 +396,7 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 viewModelMaAc.picSize.collect {
-                   chsz.title="Choose pic size($it)"
+                    chsz.title = "Choose pic size($it)"
                 }
             }
         }
@@ -581,7 +581,11 @@ class MainActivity : AppCompatActivity() {
 
         //  private const val REQUEST_CODE_PERMISSIONS = 10
         private val REQUIRED_PERMISSIONS =
-            arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)
+            mutableListOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO).apply {
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+                    add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                }
+            }.toTypedArray()
     }
 
 
@@ -637,7 +641,8 @@ class MainActivity : AppCompatActivity() {
                 ContentValues().apply {
                     put(
                         MediaStore.MediaColumns.DISPLAY_NAME,
-                        LocalDateTime.now().format(DateTimeFormatter.ofPattern(FILENAME_FORMAT))
+                        //LocalDateTime.now().format(DateTimeFormatter.ofPattern(FILENAME_FORMAT))
+                        datelocaltimestring()
                     )
                     put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
                     if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
@@ -681,10 +686,31 @@ class MainActivity : AppCompatActivity() {
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                     val savedUri = output.savedUri
-                    val msg = "Photo capture succeeded: $savedUri"
+                    val msg = "Photo capture succeeded: ${savedUri ?: ""}"
                     Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
-                    Log.d(TAG, msg)
+                    Log.v(TAG, msg)
                     viewModelMaAc.photoAction.value = ViewModelMainActivity.PhotoAction.Non
+
+                    // CANNOT SET DISPLAY NAME (file name) on Android 8 in Picture common files if not directory selected.
+//                    if(Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+//                        savedUri?.let { lSavedUri: Uri ->
+//                            Log.v(TAG,"QQQQQQQQQQQQQQQQQQ")
+//                            contentResolver.update(
+//                                lSavedUri,
+//                                ContentValues().apply {
+//                                    put(
+//                                        MediaStore.MediaColumns.DISPLAY_NAME,
+//                                        //LocalDateTime.now().format(DateTimeFormatter.ofPattern(FILENAME_FORMAT))
+//                                        datelocaltimestring() + ".jpg"
+//                                    )
+//                                    put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+//                                },
+//                                null,
+//                                null
+//                            )
+//                        }
+//                    }
+
                 }
             })
     }
@@ -1056,8 +1082,5 @@ class MainActivity : AppCompatActivity() {
 
 }
 
-fun datelocaltimestring() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-    LocalDateTime.now().toString()
-} else {
-    Date().toString()
-}
+fun datelocaltimestring() = LocalDateTime.now()
+    .format(DateTimeFormatter.ofPattern("uuuu-MM-dd-HH.mm.ss.SSS", Locale.getDefault()))
