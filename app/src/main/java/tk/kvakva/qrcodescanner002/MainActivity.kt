@@ -14,6 +14,7 @@ import android.media.MediaRecorder
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import android.util.Size
@@ -45,6 +46,7 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import kotlinx.coroutines.launch
 import tk.kvakva.qrcodescanner002.databinding.ActivityMainBinding
+import java.io.File
 import java.io.IOException
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -625,7 +627,6 @@ class MainActivity : AppCompatActivity() {
                 null
             }
 
-
         val outputOptions = docFile?.let {
             contentResolver.openOutputStream(it.uri)?.let {
                 ImageCapture.OutputFileOptions
@@ -634,26 +635,48 @@ class MainActivity : AppCompatActivity() {
                     )
                     .build()
             }
-        } ?: ImageCapture.OutputFileOptions
-            .Builder(
-                contentResolver,
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                ContentValues().apply {
-                    put(
-                        MediaStore.MediaColumns.DISPLAY_NAME,
-                        //LocalDateTime.now().format(DateTimeFormatter.ofPattern(FILENAME_FORMAT))
-                        datelocaltimestring()
-                    )
-                    put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
-                    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+        } ?: if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+            val picDir: File =
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+            if (!File(picDir, resources.getString(R.string.app_name)).isDirectory)
+                try {
+                    File(picDir, resources.getString(R.string.app_name)).mkdirs()
+                } catch (e: SecurityException) {
+                    e.printStackTrace()
+                    Toast.makeText(this, e.localizedMessage, Toast.LENGTH_LONG).show()
+                }
+            val savedFile = if (File(picDir, resources.getString(R.string.app_name)).isDirectory)
+                File(
+                    picDir,
+                    resources.getString(R.string.app_name) + File.pathSeparator + datelocaltimestring() + ".jpg"
+                )
+            else
+                File(picDir, datelocaltimestring() + ".jpg")
+
+            ImageCapture.OutputFileOptions
+                .Builder(savedFile)
+                .build()
+        } else
+            ImageCapture.OutputFileOptions
+                .Builder(
+                    contentResolver,
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    ContentValues().apply {
                         put(
-                            MediaStore.Images.Media.RELATIVE_PATH,
-                            "Pictures/" + resources.getString(R.string.app_name)
-                        ) //SevasCameraApp")
-                    }
-                }//contentValues
-            )
-            .build()
+                            MediaStore.MediaColumns.DISPLAY_NAME,
+                            //LocalDateTime.now().format(DateTimeFormatter.ofPattern(FILENAME_FORMAT))
+                            datelocaltimestring()
+                        )
+                        put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+                        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+                            put(
+                                MediaStore.Images.Media.RELATIVE_PATH,
+                                "Pictures/" + resources.getString(R.string.app_name)
+                            ) //SevasCameraApp")
+                        }
+                    }//contentValues
+                )
+                .build()
 
 
         //ImageCapture.OutputFileOptions
@@ -802,7 +825,7 @@ class MainActivity : AppCompatActivity() {
         // [END run_detector]
     }
 
-    fun fillData(barcodes: List<Barcode>) {
+    private fun fillData(barcodes: List<Barcode>) {
         //viewModelMaAc.listOfScannedTexts.postValue(listOf())
         val r = mutableListOf<DecodedText>()
         for (barcode: Barcode in barcodes) {
