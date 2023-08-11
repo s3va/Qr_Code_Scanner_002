@@ -18,6 +18,7 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import android.util.Size
+import android.util.TypedValue
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -264,6 +265,25 @@ class MainActivity : AppCompatActivity() {
             })
         viewModelMaAc.listOfScannedTexts.observe(this) {
             recViewAdapter.data = it
+        }
+
+        viewModelMaAc.qrTvVis.observe(this){
+            if(it) {
+                binding.scannedTextsRecyclerView.setBackgroundColor(
+                    ContextCompat.getColor(
+                        this,
+                        TypedValue().apply {
+                            theme.resolveAttribute(
+                                com.google.android.material.R.attr.colorOnPrimary,
+                                this,
+                                true
+                            )
+                        }.resourceId
+                    )
+                )
+            }else{
+                binding.scannedTextsRecyclerView.setBackgroundColor(ContextCompat.getColor(this, android.R.color.transparent))
+            }
         }
 
         binding.photoBtn.setOnClickListener(::takePhoto)

@@ -120,6 +120,8 @@
             app:layout_constraintStart_toEndOf="@+id/scanPhotoBtn"
             tools:src="@drawable/ic_baseline_qr_code_24" />
 
+<!--        app:backgroundResource="@{viewmodelmainactivity.qrTvVis? android.R.drawable.editbox_background : 0 }"-->
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/scanned_texts_recycler_view"
             android:layout_width="match_parent"
@@ -127,7 +129,6 @@
             app:layout_constrainedHeight="true"
             android:layout_margin="4dp"
             android:orientation="vertical"
-            app:backgroundResource="@{viewmodelmainactivity.qrTvVis? android.R.drawable.editbox_background : 0 }"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_constraintBottom_toTopOf="@id/scanPhotoBtn"
             app:layout_constraintEnd_toEndOf="parent"
