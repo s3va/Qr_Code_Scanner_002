@@ -15,6 +15,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.os.Parcelable
 import android.provider.MediaStore
 import android.util.Log
 import android.util.Size
@@ -118,118 +119,38 @@ class MainActivity : AppCompatActivity() {
     private var picpicker = registerForActivityResult(
         ActivityResultContracts.GetContent()
     ) { picUri ->
-        if (picUri == null) {
-            Toast.makeText(this, "No PicTure Selected!", Toast.LENGTH_LONG).show()
-        } else {            // binding.picImageView.setImageURI(picUri)
+        decodePicture(picUri)
+    }
 
-            val mBitmap: Bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                ImageDecoder.decodeBitmap(ImageDecoder.createSource(contentResolver, picUri))
-            } else {
+    /**
+     * {@inheritDoc}
+     *
+     * Dispatches this call to all listeners added via
+     * [.addOnNewIntentListener].
+     */
+    override fun onNewIntent(iTent: Intent?) {
+        super.onNewIntent(intent)
+        Log.v(TAG,"ON NEW INTENT\nACTION: ${intent.action}\nextras: ${intent.extras}\nintent: $intent")
+        uriInIntent(iTent)
 
-                val m = Matrix()
-                contentResolver.openInputStream(picUri)?.use { inStream ->
-                    ExifInterface(inStream).run {
-                        m.postRotate(rotationDegrees.toFloat())
-                        // If lat/long is null, fall back to the coordinates (0, 0).
-                        //val latLong = latLong ?: doubleArrayOf(0.0, 0.0)
-                    }
+    }
 
-                }
-                //val b = MediaStore.Images.Media.getBitmap(contentResolver, picUri)
-                //                                                     API 29  Android 10
-                val b = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-                    MediaStore.Images.Media.getBitmap(contentResolver, picUri)
-                } else {
-                    ImageDecoder.decodeBitmap(ImageDecoder.createSource(contentResolver, picUri))
-                }
-
-                Bitmap.createBitmap(b, 0, 0, b.width, b.height, m, true)
-            }
-
-//            val mBitmap: Bitmap = BitmapFactory
-//                .decodeStream(
-//                    contentResolver
-//                        .openInputStream(
-//                            picUri
-//                        )
-//                )
-
-            val bitmap = mBitmap.copy(Bitmap.Config.ARGB_8888, true)
-            val canvas = Canvas(bitmap)
-            val paint = Paint()
-            paint.color = Color.RED
-            paint.strokeWidth = 10f
-            paint.style = Paint.Style.STROKE
-            paint.alpha = 50
-
-            binding.picImageView.setImageBitmap(bitmap)
-            binding.picImageView.visibility = View.VISIBLE
-            val image: InputImage
-            try { //image = InputImage.fromFilePath(this, picUri)
-                image = InputImage.fromBitmap(bitmap, 0)
-                Log.e(TAG, "${image.height}x${image.width}")
-                //val scanner = BarcodeScanning.getClient()
-                val result = scanner.process(image)
-                    .addOnSuccessListener { barcodes ->
-                        Log.e(TAG, "////////////\\\\\\\\ scanBarcodes: size-> ${barcodes.size}")
-                        fillData(barcodes)
-//                        viewModelMaAc.qrTvTxSet("")
-//                        viewModelMaAc.listOfScannedTexts.postValue(listOf())
-//                        val r = mutableListOf<DecodedText>()
-//                        for (barcode in barcodes) {
-//
-//                            val rawValue = barcode.rawValue
-//                            //viewModelMaAc.qrTvTxSet(viewModelMaAc.qrTvTx.value + "\n--------\n" + rawValue)
-//                            r.add(
-//                                DecodedText(
-//                                    txt = (rawValue ?: "").replace(Char(29), '\n'),
-//                                )
-//                            )
-//                            Log.v(TAG, "scanBarcodes: barcode.rawValue ====== ${barcode.rawValue}")
-//                            Log.v(
-//                                TAG,
-//                                "scanBarcodes: barcode.displayValue ====== ${barcode.displayValue}"
-//                            )
-//                            val valueType = barcode.valueType
-//                            when (valueType) {
-//                                Barcode.TYPE_CALENDAR_EVENT -> {
-//
-//                                }
-//
-//                                Barcode.TYPE_WIFI -> {
-//                                    val ssid = barcode.wifi!!.ssid
-//                                    val password = barcode.wifi!!.password
-//                                    val type = barcode.wifi!!.encryptionType
-//                                }
-//
-//                                Barcode.TYPE_URL -> {
-//                                    val title = barcode.url!!.title
-//                                    val url = barcode.url!!.url
-//                                }
-//                            }
-//                        }
-                        if (barcodes.size > 0) {
-                            for (barcode in barcodes) {
-                                val bounds = barcode.boundingBox
-                                val corners = barcode.cornerPoints
-
-                                Log.e(TAG, bounds.toString())
-                                if (bounds != null) {
-                                    Log.e(TAG, "**** $bounds")
-                                    canvas.drawRect(bounds, paint)
-                                    canvas.drawLine(0f, 0f, 100f, 100f, paint)
-                                }
-                                binding.picImageView.invalidate()
-                            }
+    private fun uriInIntent(iTent: Intent?) {
+        if (intent?.action == Intent.ACTION_SEND) {
+            if (intent.type?.startsWith("image/") == true) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    iTent?.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+                        ?.let { uri: Uri ->
+                            decodePicture(uri)
                         }
-                        //viewModelMaAc.listOfScannedTexts.postValue(r)
+                } else {
+                    (iTent?.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri)?.let { uri: Uri ->
+                        decodePicture(uri)
                     }
-                    .addOnFailureListener {
-                        Log.e(TAG, "scanBarcodes: ${it.stackTraceToString()}")
-                    }
-            } catch (e: IOException) {
-                e.printStackTrace()
+                }
+                Log.v(TAG, "Intent iTent?.extras: ${iTent?.extras}")
             }
+
         }
     }
 
@@ -267,8 +188,8 @@ class MainActivity : AppCompatActivity() {
             recViewAdapter.data = it
         }
 
-        viewModelMaAc.qrTvVis.observe(this){
-            if(it) {
+        viewModelMaAc.qrTvVis.observe(this) {
+            if (it) {
                 binding.scannedTextsRecyclerView.setBackgroundColor(
                     ContextCompat.getColor(
                         this,
@@ -281,8 +202,13 @@ class MainActivity : AppCompatActivity() {
                         }.resourceId
                     )
                 )
-            }else{
-                binding.scannedTextsRecyclerView.setBackgroundColor(ContextCompat.getColor(this, android.R.color.transparent))
+            } else {
+                binding.scannedTextsRecyclerView.setBackgroundColor(
+                    ContextCompat.getColor(
+                        this,
+                        android.R.color.transparent
+                    )
+                )
             }
         }
 
@@ -395,6 +321,8 @@ class MainActivity : AppCompatActivity() {
             it.visibility = View.GONE
         }
 
+        uriInIntent(intent)
+        Log.v(TAG,"ON CREATE\nACTION: ${intent.action}\nextras: ${intent.extras}\nintent: $intent")
 
     }
 
@@ -1122,6 +1050,126 @@ class MainActivity : AppCompatActivity() {
         val shareIntent = Intent.createChooser(sendIntent, "Send decoded text")
         startActivity(shareIntent)
     }
+
+
+    private fun decodePicture(picUri: Uri?) {// picUri ->
+        if (picUri == null) {
+            Toast.makeText(this, "No PicTure Selected!", Toast.LENGTH_LONG).show()
+        } else {            // binding.picImageView.setImageURI(picUri)
+
+            val mBitmap: Bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                ImageDecoder.decodeBitmap(ImageDecoder.createSource(contentResolver, picUri))
+            } else {
+
+                val m = Matrix()
+                contentResolver.openInputStream(picUri)?.use { inStream ->
+                    ExifInterface(inStream).run {
+                        m.postRotate(rotationDegrees.toFloat())
+                        // If lat/long is null, fall back to the coordinates (0, 0).
+                        //val latLong = latLong ?: doubleArrayOf(0.0, 0.0)
+                    }
+
+                }
+                //val b = MediaStore.Images.Media.getBitmap(contentResolver, picUri)
+                //                                                     API 29  Android 10
+                val b = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                    MediaStore.Images.Media.getBitmap(contentResolver, picUri)
+                } else {
+                    ImageDecoder.decodeBitmap(ImageDecoder.createSource(contentResolver, picUri))
+                }
+
+                Bitmap.createBitmap(b, 0, 0, b.width, b.height, m, true)
+            }
+
+            /*
+                        val mBitmap: Bitmap = BitmapFactory
+                            .decodeStream(
+                                contentResolver
+                                    .openInputStream(
+                                        picUri
+                                    )
+                            )
+            */
+
+            val bitmap = mBitmap.copy(Bitmap.Config.ARGB_8888, true)
+            val canvas = Canvas(bitmap)
+            val paint = Paint()
+            paint.color = Color.RED
+            paint.strokeWidth = 10f
+            paint.style = Paint.Style.STROKE
+            paint.alpha = 50
+
+            binding.picImageView.setImageBitmap(bitmap)
+            binding.picImageView.visibility = View.VISIBLE
+            val image: InputImage
+            try { //image = InputImage.fromFilePath(this, picUri)
+                image = InputImage.fromBitmap(bitmap, 0)
+                Log.e(TAG, "${image.height}x${image.width}")
+                //val scanner = BarcodeScanning.getClient()
+                val result = scanner.process(image)
+                    .addOnSuccessListener { barcodes ->
+                        Log.e(TAG, "////////////\\\\\\\\ scanBarcodes: size-> ${barcodes.size}")
+                        fillData(barcodes)
+                        /*                        viewModelMaAc.qrTvTxSet("")
+                                                viewModelMaAc.listOfScannedTexts.postValue(listOf())
+                                                val r = mutableListOf<DecodedText>()
+                                                for (barcode in barcodes) {
+
+                                                    val rawValue = barcode.rawValue
+                                                    //viewModelMaAc.qrTvTxSet(viewModelMaAc.qrTvTx.value + "\n--------\n" + rawValue)
+                                                    r.add(
+                                                        DecodedText(
+                                                            txt = (rawValue ?: "").replace(Char(29), '\n'),
+                                                        )
+                                                    )
+                                                    Log.v(TAG, "scanBarcodes: barcode.rawValue ====== ${barcode.rawValue}")
+                                                    Log.v(
+                                                        TAG,
+                                                        "scanBarcodes: barcode.displayValue ====== ${barcode.displayValue}"
+                                                    )
+                                                    val valueType = barcode.valueType
+                                                    when (valueType) {
+                                                        Barcode.TYPE_CALENDAR_EVENT -> {
+
+                                                        }
+
+                                                        Barcode.TYPE_WIFI -> {
+                                                            val ssid = barcode.wifi!!.ssid
+                                                            val password = barcode.wifi!!.password
+                                                            val type = barcode.wifi!!.encryptionType
+                                                        }
+
+                                                        Barcode.TYPE_URL -> {
+                                                            val title = barcode.url!!.title
+                                                            val url = barcode.url!!.url
+                                                        }
+                                                    }
+                                                }*/
+                        if (barcodes.size > 0) {
+                            for (barcode in barcodes) {
+                                val bounds = barcode.boundingBox
+                                val corners = barcode.cornerPoints
+
+                                Log.e(TAG, bounds.toString())
+                                if (bounds != null) {
+                                    Log.e(TAG, "**** $bounds")
+                                    canvas.drawRect(bounds, paint)
+                                    canvas.drawLine(0f, 0f, 100f, 100f, paint)
+                                }
+                                binding.picImageView.invalidate()
+                            }
+                        }
+                        //viewModelMaAc.listOfScannedTexts.postValue(r)
+                    }
+                    .addOnFailureListener {
+                        Log.e(TAG, "scanBarcodes: ${it.stackTraceToString()}")
+                    }
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+        }
+    }
+
 
 }
 
