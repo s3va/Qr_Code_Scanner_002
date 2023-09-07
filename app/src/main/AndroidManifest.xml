@@ -20,7 +20,7 @@
         android:theme="@style/Theme.QrCodeScanner002">
 
         <activity
-            android:launchMode="singleTop"
+            android:launchMode="singleInstance"
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>

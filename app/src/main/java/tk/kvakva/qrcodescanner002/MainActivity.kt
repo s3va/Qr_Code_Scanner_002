@@ -129,28 +129,27 @@ class MainActivity : AppCompatActivity() {
      * [.addOnNewIntentListener].
      */
     override fun onNewIntent(iTent: Intent?) {
-        super.onNewIntent(intent)
-        Log.v(TAG,"ON NEW INTENT\nACTION: ${intent.action}\nextras: ${intent.extras}\nintent: $intent")
+        super.onNewIntent(iTent)
+        Log.v(
+            TAG,
+            "ON NEW INTENT\nACTION: ${iTent?.action}\nextras: ${iTent?.extras}\nintent: $iTent"
+        )
+        Log.v(TAG, "ON NEW INTENT\nDATA: ${iTent?.data}")
+
         uriInIntent(iTent)
 
     }
 
     private fun uriInIntent(iTent: Intent?) {
-        if (intent?.action == Intent.ACTION_SEND) {
-            if (intent.type?.startsWith("image/") == true) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    iTent?.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
-                        ?.let { uri: Uri ->
-                            decodePicture(uri)
-                        }
-                } else {
-                    (iTent?.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri)?.let { uri: Uri ->
-                        decodePicture(uri)
-                    }
+        if (iTent?.action == Intent.ACTION_SEND && iTent.type?.startsWith("image/") == true) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                iTent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)?.let { uri: Uri ->
+                    decodePicture(uri)
                 }
-                Log.v(TAG, "Intent iTent?.extras: ${iTent?.extras}")
+            else (iTent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri)?.let { uri: Uri ->
+                decodePicture(uri)
             }
-
+            Log.v(TAG, "Intent iTent?.extras: ${iTent.extras}")
         }
     }
 
@@ -322,7 +321,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         uriInIntent(intent)
-        Log.v(TAG,"ON CREATE\nACTION: ${intent.action}\nextras: ${intent.extras}\nintent: $intent")
+        Log.v(TAG, "ON CREATE\nACTION: ${intent.action}\nextras: ${intent.extras}\nintent: $intent")
 
     }
 
