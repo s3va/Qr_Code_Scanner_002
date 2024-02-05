@@ -13,4 +13,7 @@
     <string name="share_text">share text</string>
     <string name="show_scanned_results">Show scanned results</string>
     <string name="choose_picture_size">Choose picture size</string>
+    <string name="about">About</string>
+    <string name="about_text">bc1qs4sl9gll9dxhpf4wml34c65p3zq2xhrw5f8uky\n\nemail: vmsk131uh@gmail.com</string>
+    <string name="qr_code_btc">qr code btc</string>
 </resources>

@@ -12,6 +12,9 @@
 
            />-->
 
+    <group
+         android:id="@+id/grp1"
+        >
     <item
         android:id="@+id/show_scanned_results"
         android:icon="@drawable/baseline_visibility_24"
@@ -30,7 +33,14 @@
         android:icon="@drawable/baseline_2mp_24"
         android:title="@string/choose_picture_size"
         />
-
+</group>
+<group android:id="@+id/grp2">
+    <item
+        android:id="@+id/about_menu_item"
+        android:icon="@android:drawable/ic_menu_info_details"
+        android:title="@string/about"
+        />
+</group>
 <!--    <item-->
 <!--        android:id="@+id/select_size"-->
 <!--        android:icon="@android:drawable/picture_frame"-->

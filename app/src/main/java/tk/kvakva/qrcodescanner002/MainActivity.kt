@@ -20,6 +20,7 @@ import android.provider.MediaStore
 import android.util.Log
 import android.util.Size
 import android.util.TypedValue
+import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -35,12 +36,14 @@ import androidx.camera.core.*
 import androidx.camera.core.Camera
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
+import androidx.core.view.MenuCompat
 import androidx.databinding.DataBindingUtil
 import androidx.documentfile.provider.DocumentFile
 import androidx.exifinterface.media.ExifInterface
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.divider.MaterialDividerItemDecoration
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
@@ -63,7 +66,7 @@ private const val TAG = "MainActivity"
 class MainActivity : AppCompatActivity() {
     //val sizesArray: ArrayList<String> = arrayListOf<String>()
     private var imageCapture: ImageCapture? = null
-    private var videoCapture: VideoCapture? = null
+    //private var videoCapture: VideoCapture? = null
     private var camera: Camera? = null
     private lateinit var cameraExecutor: ExecutorService
     private var cameraProvider: ProcessCameraProvider? = null
@@ -349,6 +352,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+        MenuCompat.setGroupDividerEnabled(menu,true)
         return true
     }
 
@@ -394,6 +398,28 @@ class MainActivity : AppCompatActivity() {
 
             R.id.show_scanned_results -> {
                 viewModelMaAc.qrTvVis.value = !(viewModelMaAc.qrTvVis.value ?: false)
+                true
+            }
+
+            R.id.about_menu_item -> {
+//                val mTv = TextView(this)
+//                mTv.setTextIsSelectable(true)
+//                val llout = LinearLayout(this)
+//
+//                //mTv.setCompoundDrawablesRelativeWithIntrinsicBounds(0, ,0,0)
+//                mTv.text = getString(R.string.about_text)
+
+                //val v = findViewById<LinearLayout>(R.id.qr_code_btc_ll)
+
+                MaterialAlertDialogBuilder(this)
+                    //.setTitle("About")
+                    //.setIcon(R.drawable.qrscanner_btc)
+                    .setView(LayoutInflater.from(this).inflate(R.layout.qrcode_image_text_layout,null,false))
+                    .setNegativeButton("Close"){ d,i->
+                        d.dismiss()
+                    }
+                    .show()
+
                 true
             }
 
