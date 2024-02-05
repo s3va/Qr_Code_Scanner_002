@@ -14,7 +14,6 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -111,25 +110,25 @@ class ViewModelMainActivity(private val apl: Application) : AndroidViewModel(apl
     }
 
     fun takeAVideoAction(): Boolean {
-        if (photoAction.value == PhotoAction.Non) {
-            photoAction.value = PhotoAction.GettingVideo
-            viewModelScope.launch(Dispatchers.IO) {
-                delay(7000)
-
-                // end take Video
-                if (photoAction.value == PhotoAction.GettingVideo) {
-                    photoAction.value = PhotoAction.Non
-                    tost("We just made a video!")
-                } else {
-                    Log.e(
-                        TAG,
-                        "takeAVideoAction: photoAction in takeAVideoAction is not PhotoAction.getting_photo"
-                    )
-                    tost("ERROR! takeAVideoAction: photoAction in takeAVideoAction is not PhotoAction.getting_video")
-                }
-            }
-
-        }
+//        if (photoAction.value == PhotoAction.Non) {
+//            photoAction.value = PhotoAction.GettingVideo
+//            viewModelScope.launch(Dispatchers.IO) {
+//                delay(7000)
+//
+//                // end take Video
+//                if (photoAction.value == PhotoAction.GettingVideo) {
+//                    photoAction.value = PhotoAction.Non
+//                    tost("We just made a video!")
+//                } else {
+//                    Log.e(
+//                        TAG,
+//                        "takeAVideoAction: photoAction in takeAVideoAction is not PhotoAction.getting_photo"
+//                    )
+//                    tost("ERROR! takeAVideoAction: photoAction in takeAVideoAction is not PhotoAction.getting_video")
+//                }
+//            }
+//
+//        }
         return true
     }
 

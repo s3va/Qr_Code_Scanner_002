@@ -80,7 +80,6 @@
             android:layout_marginEnd="16dp"
             android:layout_marginBottom="16dp"
             android:contentDescription="@string/take_a_picture_or_video"
-            android:onLongClick="@{() -> viewmodelmainactivity.takeAVideoAction()}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/scanPhotoBtn"
             app:layout_constraintHorizontal_bias="0.5"
@@ -88,6 +87,8 @@
             app:layout_constraintStart_toEndOf="@+id/flashBtn"
             app:srcCompat="@drawable/ic_baseline_camera_alt_24"
             app:threePictures="@{viewmodelmainactivity.photoAction}" />
+
+<!--        android:onLongClick="@{() -> viewmodelmainactivity.takeAVideoAction()}"-->
 
         <Button
             android:id="@+id/scanPhotoBtn"
