@@ -120,11 +120,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private var picpicker = registerForActivityResult(
-        ActivityResultContracts.GetContent()
+        ActivityResultContracts.OpenDocument()
+        //ActivityResultContracts.OpenDocument GetContent()
     ) { picUri ->
         decodePicture(picUri)
     }
-
+//    private var picpicker = registerForActivityResult(
+//        ActivityResultContracts.PickVisualMedia()
+//    ) { picUri ->
+//        decodePicture(picUri)
+//    }
     /**
      * {@inheritDoc}
      *
@@ -317,7 +322,8 @@ class MainActivity : AppCompatActivity() {
                 }*/
 
         binding.scanPhotoBtn.setOnClickListener {
-            picpicker.launch("image/*")
+            //picpicker.launch("image/*")
+            picpicker.launch(arrayOf("image/*"))
         }
         binding.picImageView.setOnClickListener {
             it.visibility = View.GONE
