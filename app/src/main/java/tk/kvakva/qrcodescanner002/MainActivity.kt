@@ -34,6 +34,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.camera2.interop.Camera2CameraInfo
 import androidx.camera.core.*
 import androidx.camera.core.Camera
+import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.core.view.MenuCompat
@@ -66,6 +68,7 @@ private const val TAG = "MainActivity"
 class MainActivity : AppCompatActivity() {
     //val sizesArray: ArrayList<String> = arrayListOf<String>()
     private var imageCapture: ImageCapture? = null
+
     //private var videoCapture: VideoCapture? = null
     private var camera: Camera? = null
     private lateinit var cameraExecutor: ExecutorService
@@ -420,8 +423,11 @@ class MainActivity : AppCompatActivity() {
                 MaterialAlertDialogBuilder(this)
                     //.setTitle("About")
                     //.setIcon(R.drawable.qrscanner_btc)
-                    .setView(LayoutInflater.from(this).inflate(R.layout.qrcode_image_text_layout,null,false))
-                    .setNegativeButton("Close"){ d,i->
+                    .setView(
+                        LayoutInflater.from(this)
+                            .inflate(R.layout.qrcode_image_text_layout, null, false)
+                    )
+                    .setNegativeButton("Close") { d, i ->
                         d.dismiss()
                     }
                     .show()
@@ -456,12 +462,28 @@ class MainActivity : AppCompatActivity() {
                 //.setFlashMode(flashMode)
                 //.setTargetResolution(viewModelMaAc.picSize.value)
                 //.setTargetResolution(Size(1080,1920))
-                .setTargetResolution(
-                    if (this.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT)
-                        Size(viewModelMaAc.picSize.value.height, viewModelMaAc.picSize.value.width)
-                    else
-                        viewModelMaAc.picSize.value
+                .setResolutionSelector(
+                    ResolutionSelector.Builder()
+                        .setResolutionStrategy(
+                            ResolutionStrategy(
+                                if (this.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT)
+                                    Size(
+                                        viewModelMaAc.picSize.value.height,
+                                        viewModelMaAc.picSize.value.width
+                                    )
+                                else
+                                    viewModelMaAc.picSize.value,
+                                ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER
+                            )
+                        )
+                        .build()
                 )
+//                .setTargetResolution(
+//                    if (this.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT)
+//                        Size(viewModelMaAc.picSize.value.height, viewModelMaAc.picSize.value.width)
+//                    else
+//                        viewModelMaAc.picSize.value
+//                )
                 .build()
 
 
@@ -924,13 +946,29 @@ class MainActivity : AppCompatActivity() {
 
         imageAnalyzer = ImageAnalysis.Builder()
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .setTargetResolution(
-                if (this.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT)
-                    Size(viewModelMaAc.picSize.value.height, viewModelMaAc.picSize.value.width)
-                else
-                    viewModelMaAc.picSize.value
-                //Size(1080,1920)
+            .setResolutionSelector(
+                ResolutionSelector.Builder()
+                    .setResolutionStrategy(
+                        ResolutionStrategy(
+                            if (this.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT)
+                                Size(
+                                    viewModelMaAc.picSize.value.height,
+                                    viewModelMaAc.picSize.value.width
+                                )
+                            else
+                                viewModelMaAc.picSize.value,
+                            ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER
+                        )
+                    )
+                    .build()
             )
+//            .setTargetResolution(
+//                if (this.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT)
+//                    Size(viewModelMaAc.picSize.value.height, viewModelMaAc.picSize.value.width)
+//                else
+//                    viewModelMaAc.picSize.value
+//                //Size(1080,1920)
+//            )
             .build()
             .also {
 
