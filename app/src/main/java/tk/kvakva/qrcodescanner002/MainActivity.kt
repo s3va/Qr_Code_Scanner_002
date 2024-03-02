@@ -33,7 +33,9 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.camera2.interop.Camera2CameraInfo
 import androidx.camera.core.*
+import androidx.camera.core.AspectRatio.RATIO_16_9
 import androidx.camera.core.Camera
+import androidx.camera.core.resolutionselector.AspectRatioStrategy
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -464,16 +466,24 @@ class MainActivity : AppCompatActivity() {
                 //.setTargetResolution(Size(1080,1920))
                 .setResolutionSelector(
                     ResolutionSelector.Builder()
+//                        .setAspectRatioStrategy(
+//                            AspectRatioStrategy(
+//                                RATIO_16_9,
+//                                AspectRatioStrategy.FALLBACK_RULE_AUTO
+//                            ),
+//                        )
                         .setResolutionStrategy(
                             ResolutionStrategy(
-                                if (this.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT)
+                                if (this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                                     Size(
                                         viewModelMaAc.picSize.value.height,
                                         viewModelMaAc.picSize.value.width
                                     )
-                                else
-                                    viewModelMaAc.picSize.value,
-                                ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER
+                                } else {
+                                    viewModelMaAc.picSize.value
+                                }
+                                ,
+                                ResolutionStrategy.FALLBACK_RULE_NONE
                             )
                         )
                         .build()
@@ -521,12 +531,12 @@ class MainActivity : AppCompatActivity() {
                 camera?.let { camera ->
                     val cameraCaractristics =
                         Camera2CameraInfo.extractCameraCharacteristics(camera.cameraInfo)
-                    cameraCaractristics.keys.forEach {
-                        Log.i(
-                            TAG,
-                            "startCamera: $it\ncameraCaractristics: ${cameraCaractristics.get(it)}"
-                        )
-                    }
+//                    cameraCaractristics.keys.forEach {
+//                        Log.i(
+//                            TAG,
+//                            "startCamera: $it\ncameraCaractristics: ${cameraCaractristics.get(it)}"
+//                        )
+//                    }
                     val streamConfigurationMap: StreamConfigurationMap? =
                         cameraCaractristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
 
@@ -950,14 +960,16 @@ class MainActivity : AppCompatActivity() {
                 ResolutionSelector.Builder()
                     .setResolutionStrategy(
                         ResolutionStrategy(
-                            if (this.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT)
+                            //if (this.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT)
+                            if (this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE)
                                 Size(
                                     viewModelMaAc.picSize.value.height,
                                     viewModelMaAc.picSize.value.width
                                 )
                             else
-                                viewModelMaAc.picSize.value,
-                            ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER
+                                viewModelMaAc.picSize.value
+                            ,
+                            ResolutionStrategy.FALLBACK_RULE_NONE
                         )
                     )
                     .build()
@@ -1174,11 +1186,11 @@ class MainActivity : AppCompatActivity() {
             val image: InputImage
             try { //image = InputImage.fromFilePath(this, picUri)
                 image = InputImage.fromBitmap(bitmap, 0)
-                Log.e(TAG, "${image.height}x${image.width}")
+                //////////////////////Log.e(TAG, "${image.height}x${image.width}")
                 //val scanner = BarcodeScanning.getClient()
                 val result = scanner.process(image)
                     .addOnSuccessListener { barcodes ->
-                        Log.e(TAG, "////////////\\\\\\\\ scanBarcodes: size-> ${barcodes.size}")
+                        ////////////////////////Log.e(TAG, "////////////\\\\\\\\ scanBarcodes: size-> ${barcodes.size}")
                         fillData(barcodes)
                         /*                        viewModelMaAc.qrTvTxSet("")
                                                 viewModelMaAc.listOfScannedTexts.postValue(listOf())
@@ -1220,9 +1232,9 @@ class MainActivity : AppCompatActivity() {
                                 val bounds = barcode.boundingBox
                                 val corners = barcode.cornerPoints
 
-                                Log.e(TAG, bounds.toString())
+                                ///////////////////////Log.e(TAG, bounds.toString())
                                 if (bounds != null) {
-                                    Log.e(TAG, "**** $bounds")
+                                    //////////////Log.e(TAG, "**** $bounds")
                                     canvas.drawRect(bounds, paint)
                                     canvas.drawLine(0f, 0f, 100f, 100f, paint)
                                 }
